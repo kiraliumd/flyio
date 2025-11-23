@@ -22,7 +22,7 @@ function getRandomUserAgent() {
 }
 
 export async function scrapeBooking(pnr: string, lastname: string, airline: Airline): Promise<BookingDetails> {
-    const browser = await chromium.launch({ headless: true })
+    const browser = await chromium.launch({ headless: false })
     const context = await browser.newContext({
         userAgent: getRandomUserAgent(),
         viewport: { width: 1280, height: 720 }
@@ -61,10 +61,30 @@ export async function scrapeBooking(pnr: string, lastname: string, airline: Airl
 
             await page.waitForTimeout(1000)
 
-            // Agora sim, preencher o formulário com lógica Human-Like
-            const pnrInput = page.getByLabel(/Número de compra ou código/i)
-            await pnrInput.click()
-            await pnrInput.pressSequentially(pnr, { delay: 100 })
+            // --- DEBUG BLOCK START ---
+            console.log('📸 Tirando screenshot de diagnóstico...');
+            console.log('Page Title:', await page.title()); // Quero saber o título da página
+            // Salva na raiz do projeto para fácil acesso
+            await page.screenshot({ path: 'debug-latam-state.png', fullPage: true });
+
+            // Salva o HTML também para vermos se é bloqueio de bot
+            const htmlContent = await page.content();
+            if (htmlContent.includes('Access Denied') || htmlContent.includes('Access to this page has been denied')) {
+                console.error('⛔ BLOQUEIO DETECTADO: A Latam bloqueou o IP/Bot.');
+                throw new Error('Bot Blocked by WAF');
+            }
+            // --- DEBUG BLOCK END ---
+
+            // 1. Seleção Simplificada (para teste)
+            const pnrInput = page.getByLabel(/Número de compra ou código/i).or(page.locator('#confirmationCode'))
+
+            // 2. Garantir Visibilidade
+            console.log('Aguardando input do PNR ficar visível...');
+            await pnrInput.waitFor({ state: 'visible', timeout: 10000 });
+
+            // 3. Interação
+            await pnrInput.click();
+            await pnrInput.pressSequentially(pnr, { delay: 150 });
 
             await page.waitForTimeout(500)
 
@@ -128,6 +148,7 @@ export async function scrapeBooking(pnr: string, lastname: string, airline: Airl
 
     } catch (error) {
         console.error(`Scraping failed for ${airline} ${pnr}:`, error)
+        await page.screenshot({ path: 'error-latam-input.png', fullPage: true });
         throw new Error(`Failed to fetch booking details: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
         await browser.close()
