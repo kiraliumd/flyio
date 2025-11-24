@@ -30,9 +30,9 @@ export function DashboardSidebar() {
     const { signOut } = useAuth()
 
     return (
-        <div className="flex h-full w-64 flex-col border-r bg-white">
-            <div className="flex h-14 items-center border-b px-6">
-                <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
+        <div className="flex h-full w-full flex-col">
+            <div className="flex h-14 items-center border-b border-sidebar-border px-6">
+                <Link href="/dashboard" className="flex items-center gap-2 font-semibold text-sidebar-foreground">
                     <Plane className="h-6 w-6" />
                     <span>Flyio</span>
                 </Link>
@@ -44,10 +44,10 @@ export function DashboardSidebar() {
                             key={item.href}
                             href={item.href}
                             className={cn(
-                                "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary",
+                                "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                                 pathname === item.href
-                                    ? "bg-muted text-primary"
-                                    : "text-muted-foreground"
+                                    ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                                    : "text-sidebar-foreground/70"
                             )}
                         >
                             <item.icon className="h-4 w-4" />
@@ -56,10 +56,10 @@ export function DashboardSidebar() {
                     ))}
                 </nav>
             </div>
-            <div className="border-t p-4">
+            <div className="border-t border-sidebar-border p-4">
                 <Button
                     variant="ghost"
-                    className="w-full justify-start gap-2 text-muted-foreground hover:text-primary"
+                    className="w-full justify-start gap-2 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                     onClick={() => signOut()}
                 >
                     <LogOut className="h-4 w-4" />

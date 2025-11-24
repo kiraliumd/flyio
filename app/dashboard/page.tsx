@@ -84,7 +84,7 @@ export default async function DashboardPage() {
                                 {flights.map((flight) => (
                                     <div
                                         key={flight.id}
-                                        className="flex items-center justify-between rounded-lg border p-4"
+                                        className="flex items-center justify-between rounded-lg border bg-card text-card-foreground p-4 shadow-sm"
                                     >
                                         <div className="flex items-center gap-4">
                                             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
