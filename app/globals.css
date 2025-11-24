@@ -126,26 +126,3 @@
     @apply bg-background text-foreground;
   }
 }
-
-@layer utilities {
-  :root {
-    --sidebar-width: 255px !important;
-  }
-
-  .w-sidebar {
-    width: 255px !important;
-    min-width: 255px !important;
-  }
-
-  header {
-    position: sticky;
-    top: 0;
-    z-index: 40;
-    background-color: white;
-  }
-
-  [data-state="expanded"] .group\/sidebar-wrapper,
-  [data-variant="sidebar"] {
-    z-index: 50 !important;
-  }
-}

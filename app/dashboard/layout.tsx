@@ -54,28 +54,30 @@ export default async function DashboardLayout({
         >
             <AppSidebar user={userData} />
 
-            <SidebarInset className="overflow-hidden">
-                <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-white sticky top-0 z-10">
-                    <SidebarTrigger className="-ml-1" />
-                    <Separator orientation="vertical" className="mr-2 h-4" />
-                    <Breadcrumb>
-                        <BreadcrumbList>
-                            <BreadcrumbItem>
-                                <BreadcrumbLink href="/dashboard">Plataforma</BreadcrumbLink>
-                            </BreadcrumbItem>
-                            <BreadcrumbSeparator />
-                            <BreadcrumbItem>
-                                <BreadcrumbPage>Visão Geral</BreadcrumbPage>
-                            </BreadcrumbItem>
-                        </BreadcrumbList>
-                    </Breadcrumb>
+            <SidebarInset className="overflow-hidden bg-gray-50/50">
+                <header className="flex h-16 shrink-0 items-center gap-2 px-4 sticky top-0 z-10 bg-gray-50/50 backdrop-blur-sm">
+                    <div className="w-full max-w-[1600px] mx-auto flex items-center gap-2">
+                        <SidebarTrigger className="-ml-1" />
+                        <Separator orientation="vertical" className="mr-2 h-4" />
+                        <Breadcrumb>
+                            <BreadcrumbList>
+                                <BreadcrumbItem>
+                                    <BreadcrumbLink href="/dashboard">Plataforma</BreadcrumbLink>
+                                </BreadcrumbItem>
+                                <BreadcrumbSeparator />
+                                <BreadcrumbItem>
+                                    <BreadcrumbPage>Visão Geral</BreadcrumbPage>
+                                </BreadcrumbItem>
+                            </BreadcrumbList>
+                        </Breadcrumb>
+                    </div>
                 </header>
 
-                <div className="flex flex-1 flex-col gap-4 p-6 pt-6 bg-gray-50/50 min-h-[calc(100vh-4rem)]">
-                    <div className="w-full max-w-[1600px] mx-auto">
+                <main className="flex-1 overflow-y-auto p-6 pt-0">
+                    <div className="mx-auto w-full max-w-[1600px]">
                         {children}
                     </div>
-                </div>
+                </main>
             </SidebarInset>
         </SidebarProvider>
     )
