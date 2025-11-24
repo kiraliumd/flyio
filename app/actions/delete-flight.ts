@@ -17,7 +17,7 @@ export async function deleteFlight(ticketId: string) {
         revalidatePath('/dashboard/flights')
         return { success: true }
     } catch (error) {
-        console.error('Failed to delete flight:', error)
-        return { success: false, error: 'Failed to delete flight' }
+        console.error('Falha ao excluir voo:', error)
+        return { success: false, error: 'Falha ao excluir voo' }
     }
 }

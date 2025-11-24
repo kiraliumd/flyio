@@ -6,8 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { ExternalLink, Plus, Download, Trash2 } from 'lucide-react'
 import { calculateCheckinStatus } from '@/lib/business-rules'
-import { PassengerNameInput } from './passenger-name-input'
 import { DeleteFlightButton } from './delete-flight-button'
+import { AddFlightDialog } from '@/components/dashboard/add-flight-dialog'
+import { EditPassengerNameDialog } from '@/components/dashboard/edit-passenger-name-dialog'
 import Link from 'next/link'
 
 export const revalidate = 0
@@ -31,25 +32,20 @@ export default async function FlightsPage() {
 
     const { data: tickets } = await supabase
         .from('tickets')
-        .select('*')
-        .eq('agency_id', user?.id) // Garante o filtro explícito (embora o RLS já faça isso)
+        .select('*, flights(flight_number, origin, destination, status, departure_date)')
+        .eq('agency_id', user?.id)
         .order('flight_date', { ascending: true })
 
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
-                <h2 className="text-3xl font-bold tracking-tight">Flights</h2>
-                <Button asChild>
-                    <Link href="/dashboard/flights/new">
-                        <Plus className="mr-2 h-4 w-4" />
-                        Add Flight
-                    </Link>
-                </Button>
+                <h2 className="text-3xl font-bold tracking-tight">Voos</h2>
+                <AddFlightDialog />
             </div>
 
             <Card>
                 <CardHeader>
-                    <CardTitle>All Flights</CardTitle>
+                    <CardTitle>Todos os Voos</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <Table>
@@ -57,7 +53,7 @@ export default async function FlightsPage() {
                             <TableRow>
                                 <TableHead>Empresa</TableHead>
                                 <TableHead>Status</TableHead>
-                                <TableHead>Nome (Editável)</TableHead>
+                                <TableHead>Nome</TableHead>
                                 <TableHead>Localizador</TableHead>
                                 <TableHead>Sobrenome</TableHead>
                                 <TableHead>Check-in</TableHead>
@@ -67,23 +63,45 @@ export default async function FlightsPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {tickets?.map((ticket) => {
-                                const checkinStatus = calculateCheckinStatus(ticket.airline as any, new Date(ticket.flight_date))
+                            {tickets?.map((ticket: any) => {
+                                // Use normalized data from flights table if available, fallback to ticket (legacy)
+                                const flight = ticket.flights || ticket
+                                const flightDate = flight.departure_date || ticket.flight_date
+                                const origin = flight.origin || ticket.origin
+                                const destination = flight.destination || ticket.destination
+                                const status = flight.status || ticket.status
+
+                                const checkinStatus = calculateCheckinStatus(ticket.airline as any, new Date(flightDate))
                                 const checkinUrl = getCheckinUrl(ticket.airline, ticket.pnr, ticket.passenger_lastname)
+
+                                function getStatusVariant(status: string) {
+                                    switch (status) {
+                                        case 'Cancelado': return 'destructive'
+                                        case 'Atrasado': return 'warning'
+                                        case 'Confirmado': return 'success'
+                                        case 'Completo': return 'neutral'
+                                        default: return 'secondary'
+                                    }
+                                }
 
                                 return (
                                     <TableRow key={ticket.id}>
                                         <TableCell>{ticket.airline}</TableCell>
                                         <TableCell>
-                                            <Badge variant={ticket.status === 'Confirmado' ? 'success' : 'secondary'}>
-                                                {ticket.status}
+                                            <Badge variant={getStatusVariant(status)}>
+                                                {status}
                                             </Badge>
                                         </TableCell>
                                         <TableCell>
-                                            <PassengerNameInput
-                                                ticketId={ticket.id}
-                                                initialName={ticket.passenger_name}
-                                            />
+                                            <div className="flex items-center gap-2">
+                                                <span className="truncate max-w-[150px]" title={ticket.passenger_name}>
+                                                    {ticket.passenger_name}
+                                                </span>
+                                                <EditPassengerNameDialog
+                                                    ticketId={ticket.id}
+                                                    currentName={ticket.passenger_name}
+                                                />
+                                            </div>
                                         </TableCell>
                                         <TableCell>{ticket.pnr}</TableCell>
                                         <TableCell>{ticket.passenger_lastname}</TableCell>
@@ -93,10 +111,10 @@ export default async function FlightsPage() {
                                             </Badge>
                                         </TableCell>
                                         <TableCell>
-                                            {ticket.origin} ✈️ {ticket.destination}
+                                            {origin} ✈️ {destination}
                                         </TableCell>
                                         <TableCell>
-                                            {format(new Date(ticket.flight_date), 'dd/MM/yyyy')}
+                                            {format(new Date(flightDate), 'dd/MM/yyyy')}
                                         </TableCell>
                                         <TableCell className="text-right">
                                             <div className="flex justify-end gap-2">

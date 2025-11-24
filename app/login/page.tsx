@@ -27,7 +27,7 @@ export default function LoginPage() {
 
             if (error) throw error
 
-            toast.success('Check your email for the login link!')
+            toast.success('Verifique seu e-mail para o link de login!')
         } catch (error: any) {
             toast.error(error.message)
         } finally {
@@ -39,21 +39,21 @@ export default function LoginPage() {
         <div className="flex min-h-screen items-center justify-center bg-gray-50">
             <Card className="w-full max-w-md">
                 <CardHeader>
-                    <CardTitle className="text-center text-2xl font-bold">Flyio Login</CardTitle>
+                    <CardTitle className="text-center text-2xl font-bold">Entrar no Flyio</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={handleLogin} className="space-y-4">
                         <div className="space-y-2">
                             <Input
                                 type="email"
-                                placeholder="Enter your email"
+                                placeholder="Digite seu e-mail"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 required
                             />
                         </div>
                         <Button type="submit" className="w-full" disabled={loading}>
-                            {loading ? 'Sending Magic Link...' : 'Sign in with Email'}
+                            {loading ? 'Enviando Link Mágico...' : 'Entrar com E-mail'}
                         </Button>
                     </form>
                 </CardContent>

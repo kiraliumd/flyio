@@ -29,12 +29,12 @@ export function DeleteFlightButton({ ticketId }: DeleteFlightButtonProps) {
         try {
             const result = await deleteFlight(ticketId)
             if (result.success) {
-                toast.success('Flight deleted successfully')
+                toast.success('Voo excluído com sucesso')
             } else {
-                toast.error(result.error || 'Failed to delete flight')
+                toast.error(result.error || 'Falha ao excluir voo')
             }
         } catch (error) {
-            toast.error('An unexpected error occurred')
+            toast.error('Ocorreu um erro inesperado')
         } finally {
             setLoading(false)
         }
@@ -49,15 +49,15 @@ export function DeleteFlightButton({ ticketId }: DeleteFlightButtonProps) {
             </AlertDialogTrigger>
             <AlertDialogContent>
                 <AlertDialogHeader>
-                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                    <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
                     <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete the flight from your records.
+                        Esta ação não pode ser desfeita. Isso excluirá permanentemente o voo dos seus registros.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
                     <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
-                        {loading ? 'Deleting...' : 'Delete'}
+                        {loading ? 'Excluindo...' : 'Excluir'}
                     </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>

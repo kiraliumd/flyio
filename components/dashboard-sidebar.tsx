@@ -9,17 +9,17 @@ import { useAuth } from '@/components/auth-provider'
 
 const sidebarItems = [
     {
-        title: 'Dashboard',
+        title: 'Painel',
         href: '/dashboard',
         icon: LayoutDashboard,
     },
     {
-        title: 'Flights',
+        title: 'Voos',
         href: '/dashboard/flights',
         icon: Plane,
     },
     {
-        title: 'Settings',
+        title: 'Configurações',
         href: '/dashboard/settings',
         icon: Settings,
     },
@@ -63,7 +63,7 @@ export function DashboardSidebar() {
                     onClick={() => signOut()}
                 >
                     <LogOut className="h-4 w-4" />
-                    Sign Out
+                    Sair
                 </Button>
             </div>
         </div>

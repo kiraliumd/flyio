@@ -30,7 +30,7 @@ export async function refreshFlight(ticketId: string, pnr: string, lastName: str
         revalidatePath('/dashboard/flights')
         return { success: true }
     } catch (error) {
-        console.error('Failed to refresh flight:', error)
-        return { success: false, error: 'Failed to refresh flight data' }
+        console.error('Falha ao atualizar voo:', error)
+        return { success: false, error: 'Falha ao atualizar dados do voo' }
     }
 }

@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Plus, Plane, Calendar, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
+import { AddFlightDialog } from '@/components/dashboard/add-flight-dialog'
 import { createClient } from '@supabase/supabase-js'
 import { Badge } from '@/components/ui/badge'
 import { format } from 'date-fns'
@@ -31,20 +32,15 @@ export default async function DashboardPage() {
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
-                <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
-                <Button asChild>
-                    <Link href="/dashboard/flights/new">
-                        <Plus className="mr-2 h-4 w-4" />
-                        Add Flight
-                    </Link>
-                </Button>
+                <h2 className="text-3xl font-bold tracking-tight">Painel</h2>
+                <AddFlightDialog />
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">
-                            Total Flights
+                            Total de Voos
                         </CardTitle>
                         <Plane className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
@@ -55,7 +51,7 @@ export default async function DashboardPage() {
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">
-                            Active Check-ins
+                            Check-ins Ativos
                         </CardTitle>
                         <AlertCircle className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
@@ -68,19 +64,19 @@ export default async function DashboardPage() {
             <div className="grid gap-4">
                 <Card>
                     <CardHeader>
-                        <CardTitle>Recent Flights</CardTitle>
+                        <CardTitle>Voos Recentes</CardTitle>
                         <CardDescription>
-                            Your monitored flights and their status.
+                            Seus voos monitorados e seus status.
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         {!flights || flights.length === 0 ? (
                             <div className="flex h-[200px] items-center justify-center rounded-md border border-dashed">
                                 <div className="text-center">
-                                    <p className="text-sm text-muted-foreground">No flights found</p>
-                                    <Button variant="link" asChild className="mt-2">
-                                        <Link href="/dashboard/flights/new">Add your first flight</Link>
-                                    </Button>
+                                    <p className="text-sm text-muted-foreground">Nenhum voo encontrado</p>
+                                    <div className="mt-2">
+                                        <AddFlightDialog />
+                                    </div>
                                 </div>
                             </div>
                         ) : (
@@ -106,7 +102,7 @@ export default async function DashboardPage() {
                                             <div className="text-right">
                                                 <div className="flex items-center gap-1 text-sm text-muted-foreground">
                                                     <Calendar className="h-3 w-3" />
-                                                    {format(new Date(flight.flight_date), 'MMM d, yyyy')}
+                                                    {format(new Date(flight.flight_date), 'dd/MM/yyyy')}
                                                 </div>
                                                 <p className="text-sm font-medium">{flight.origin} → {flight.destination}</p>
                                             </div>

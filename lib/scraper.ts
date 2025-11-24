@@ -22,6 +22,19 @@ function getRandomUserAgent() {
 }
 
 export async function scrapeBooking(pnr: string, lastname: string, airline: Airline): Promise<BookingDetails> {
+    switch (airline) {
+        case 'LATAM':
+            return await scrapeLatam(pnr, lastname)
+        case 'GOL':
+            return await scrapeGol(pnr, lastname)
+        case 'AZUL':
+            return await scrapeAzul(pnr, lastname)
+        default:
+            throw new Error(`Airline ${airline} not supported`)
+    }
+}
+
+async function scrapeLatam(pnr: string, lastname: string): Promise<BookingDetails> {
     const browser = await chromium.launch({ headless: false })
     const context = await browser.newContext({
         userAgent: getRandomUserAgent(),
@@ -30,127 +43,165 @@ export async function scrapeBooking(pnr: string, lastname: string, airline: Airl
     const page = await context.newPage()
 
     try {
-        console.log(`Starting scrape for ${airline} - PNR: ${pnr}`)
+        console.log(`Starting scrape for LATAM - PNR: ${pnr}`)
 
-        let bookingDetails: BookingDetails
+        await page.goto('https://www.latamairlines.com/br/pt/minhas-viagens', { waitUntil: 'domcontentloaded' })
 
-        if (airline === 'LATAM') {
-            await page.goto('https://www.latamairlines.com/br/pt/minhas-viagens', { waitUntil: 'domcontentloaded' })
+        // 1. Espera Inicial para animação
+        await page.waitForTimeout(3000)
 
-            // 1. Espera Inicial para animação
-            await page.waitForTimeout(3000)
-
-            // 2. Lógica de 3 Camadas para Cookies
-            try {
-                console.log('Tentando fechar cookies...')
-                const cookieBtn = page.getByRole('button', { name: 'Aceite todos os cookies' })
-                if (await cookieBtn.isVisible({ timeout: 5000 })) {
-                    await cookieBtn.click()
-                    console.log('Botão de cookies clicado.')
+        // 2. Lógica de 3 Camadas para Cookies
+        try {
+            console.log('Tentando fechar cookies...')
+            const cookieBtn = page.getByRole('button', { name: 'Aceite todos os cookies' })
+            if (await cookieBtn.isVisible({ timeout: 5000 })) {
+                await cookieBtn.click()
+                console.log('Botão de cookies clicado.')
+            }
+        } catch (error) {
+            console.log('Clique falhou, tentando remover o banner via JS...')
+            await page.evaluate(() => {
+                const buttons = Array.from(document.querySelectorAll('button'))
+                const targetBtn = buttons.find(b => b.innerText.includes('Aceite todos os cookies'))
+                if (targetBtn) {
+                    targetBtn.closest('div[role="dialog"]')?.remove() || targetBtn.closest('div')?.remove()
                 }
-            } catch (error) {
-                console.log('Clique falhou, tentando remover o banner via JS...')
-                await page.evaluate(() => {
-                    const buttons = Array.from(document.querySelectorAll('button'))
-                    const targetBtn = buttons.find(b => b.innerText.includes('Aceite todos os cookies'))
-                    if (targetBtn) {
-                        targetBtn.closest('div[role="dialog"]')?.remove() || targetBtn.closest('div')?.remove()
-                    }
-                })
-            }
+            })
+        }
 
-            await page.waitForTimeout(1000)
+        await page.waitForTimeout(1000)
 
-            // --- DEBUG BLOCK START ---
-            console.log('📸 Tirando screenshot de diagnóstico...');
-            console.log('Page Title:', await page.title()); // Quero saber o título da página
-            // Salva na raiz do projeto para fácil acesso
-            await page.screenshot({ path: 'debug-latam-state.png', fullPage: true });
+        // --- DEBUG BLOCK START ---
+        console.log('📸 Tirando screenshot de diagnóstico...');
+        console.log('Page Title:', await page.title()); // Quero saber o título da página
+        // Salva na raiz do projeto para fácil acesso
+        await page.screenshot({ path: 'debug-latam-state.png', fullPage: true });
 
-            // Salva o HTML também para vermos se é bloqueio de bot
-            const htmlContent = await page.content();
-            if (htmlContent.includes('Access Denied') || htmlContent.includes('Access to this page has been denied')) {
-                console.error('⛔ BLOQUEIO DETECTADO: A Latam bloqueou o IP/Bot.');
-                throw new Error('Bot Blocked by WAF');
-            }
-            // --- DEBUG BLOCK END ---
+        // Salva o HTML também para vermos se é bloqueio de bot
+        const htmlContent = await page.content();
+        if (htmlContent.includes('Access Denied') || htmlContent.includes('Access to this page has been denied')) {
+            console.error('⛔ BLOQUEIO DETECTADO: A Latam bloqueou o IP/Bot.');
+            throw new Error('Bot Blocked by WAF');
+        }
+        // --- DEBUG BLOCK END ---
 
-            // 1. Seleção Simplificada (para teste)
-            const pnrInput = page.getByLabel(/Número de compra ou código/i).or(page.locator('#confirmationCode'))
+        // 1. Seleção Simplificada (para teste)
+        const pnrInput = page.getByLabel(/Número de compra ou código/i).or(page.locator('#confirmationCode'))
 
-            // 2. Garantir Visibilidade
-            console.log('Aguardando input do PNR ficar visível...');
-            await pnrInput.waitFor({ state: 'visible', timeout: 10000 });
+        // 2. Garantir Visibilidade
+        console.log('Aguardando input do PNR ficar visível...');
+        await pnrInput.waitFor({ state: 'visible', timeout: 10000 });
 
-            // 3. Interação
-            await pnrInput.click();
-            await pnrInput.pressSequentially(pnr, { delay: 150 });
+        // 3. Interação
+        await pnrInput.click();
+        await pnrInput.pressSequentially(pnr, { delay: 150 });
 
-            await page.waitForTimeout(500)
+        await page.waitForTimeout(500)
 
-            const lastnameInput = page.getByLabel(/Sobrenome do passageiro/i)
-            await lastnameInput.click()
-            await lastnameInput.pressSequentially(lastname, { delay: 100 })
+        const lastnameInput = page.getByLabel(/Sobrenome do passageiro/i)
+        await lastnameInput.click()
+        await lastnameInput.pressSequentially(lastname, { delay: 100 })
 
-            await page.waitForTimeout(500)
+        await page.waitForTimeout(500)
 
-            await page.getByRole('button', { name: 'Procurar' }).click()
+        await page.getByRole('button', { name: 'Procurar' }).click()
 
-            await page.waitForTimeout(5000)
+        await page.waitForTimeout(5000)
 
-            // Scroll Obrigatório
-            await page.mouse.wheel(0, 1000)
-            await page.waitForTimeout(2000)
+        // Scroll Obrigatório
+        await page.mouse.wheel(0, 1000)
+        await page.waitForTimeout(2000)
 
-            // Estratégia de Extração (Busca Inteligente via Regex)
-            const pageText = await page.evaluate(() => document.body.innerText)
+        // 4. Anti-Noise Text Parsing Strategy
+        const fullText = await page.evaluate(() => document.body.innerText);
 
-            const flightNumberMatch = pageText.match(/LA\s?\d{3,4}/i)
-            const flightNumber = flightNumberMatch ? flightNumberMatch[0].replace(/\s/g, '').toUpperCase() : 'LA0000'
+        // CORTE DE SEGURANÇA: Jogar fora tudo antes de "Itinerário"
+        const splitKeyword = 'Itinerário';
+        const itineraryIndex = fullText.indexOf(splitKeyword);
 
-            const dateMatch = pageText.match(/(\d{2})\/(\d{2})\/(\d{4})/)
-            let departureDate = new Date().toISOString()
-            if (dateMatch) {
-                const [_, day, month, year] = dateMatch
-                departureDate = new Date(`${year}-${month}-${day}T12:00:00Z`).toISOString()
-            }
+        if (itineraryIndex === -1) {
+            console.warn('Palavra-chave "Itinerário" não encontrada. Tentando extração bruta...');
+        }
 
-            const routeMatch = pageText.match(/([A-Z]{3})\s*(-|→|para)\s*([A-Z]{3})/i)
-            const origin = routeMatch ? routeMatch[1].toUpperCase() : 'GRU'
-            const destination = routeMatch ? routeMatch[3].toUpperCase() : 'MIA'
+        // Trabalhamos apenas daqui para baixo se encontrou, senão usa tudo (fallback)
+        const cleanText = itineraryIndex !== -1 ? fullText.substring(itineraryIndex) : fullText;
+        console.log('DEBUG TEXTO LIMPO:', cleanText.substring(0, 300));
 
-            bookingDetails = {
-                flightNumber,
-                departureDate,
-                origin,
-                destination
-            }
+        // Mapeamento de meses PT-BR
+        const monthMap: { [key: string]: string } = {
+            'janeiro': '01', 'fevereiro': '02', 'março': '03', 'abril': '04',
+            'maio': '05', 'junho': '06', 'julho': '07', 'agosto': '08',
+            'setembro': '09', 'outubro': '10', 'novembro': '11', 'dezembro': '12'
+        };
 
-        } else if (airline === 'GOL') {
-            // ... GOL implementation (placeholder)
-            bookingDetails = {
-                flightNumber: 'G30000',
-                departureDate: new Date().toISOString(),
-                origin: 'CGH',
-                destination: 'SDU'
-            }
-        } else {
-            // ... AZUL implementation (placeholder)
-            bookingDetails = {
-                flightNumber: 'AD0000',
-                departureDate: new Date().toISOString(),
-                origin: 'VCP',
-                destination: 'CNF'
+        // Extração da DATA
+        let departureDate = null;
+        const dateRegex = /(\d{1,2})\s+de\s+([a-zç]+)\s+de\s+(\d{4})/i;
+        const dateMatch = cleanText.match(dateRegex);
+
+        if (dateMatch) {
+            const day = dateMatch[1].padStart(2, '0');
+            const monthName = dateMatch[2].toLowerCase();
+            const year = dateMatch[3];
+            const month = monthMap[monthName];
+
+            if (month) {
+                departureDate = `${year}-${month}-${day}T12:00:00.000Z`; // Noon to be safe
             }
         }
 
-        return bookingDetails
+        // Fallback se falhar a data: usar data de amanhã para não quebrar o banco
+        if (!departureDate) {
+            console.error('Data não encontrada no padrão esperado.');
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            departureDate = tomorrow.toISOString();
+        }
+
+        // Extração do NÚMERO DO VOO
+        const flightRegex = /(LA\s?\d{3,4})/i;
+        const flightMatch = cleanText.match(flightRegex);
+        const flightNumber = flightMatch ? flightMatch[1].replace(/\s/g, '') : 'PENDENTE';
+
+        // Extração da ROTA (Origem e Destino)
+        // Buscar APENAS códigos entre parênteses (XXX)
+        const iataRegex = /\(([A-Z]{3})\)/g;
+        const matches = [...cleanText.matchAll(iataRegex)];
+        const iataCodes = matches.map(m => m[1]);
+
+        // Filtra códigos inválidos comuns
+        const validIatas = iataCodes.filter(code => code !== 'BRL' && code !== 'USD');
+
+        let origin = '---';
+        let destination = '---';
+
+        if (validIatas.length >= 2) {
+            origin = validIatas[0];
+            destination = validIatas[validIatas.length - 1];
+        }
+
+        return {
+            flightNumber,
+            departureDate,
+            origin,
+            destination
+        }
 
     } catch (error) {
-        console.error(`Scraping failed for ${airline} ${pnr}:`, error)
+        console.error(`Scraping failed for LATAM ${pnr}:`, error)
         await page.screenshot({ path: 'error-latam-input.png', fullPage: true });
         throw new Error(`Failed to fetch booking details: ${error instanceof Error ? error.message : 'Unknown error'}`)
     } finally {
         await browser.close()
     }
+}
+
+async function scrapeGol(pnr: string, lastname: string): Promise<BookingDetails> {
+    console.log('TODO: Implementar scraper da GOL');
+    throw new Error('Integração GOL em desenvolvimento');
+}
+
+async function scrapeAzul(pnr: string, lastname: string): Promise<BookingDetails> {
+    console.log('TODO: Implementar scraper da AZUL');
+    throw new Error('Integração AZUL em desenvolvimento');
 }

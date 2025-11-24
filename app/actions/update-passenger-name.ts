@@ -20,7 +20,7 @@ export async function updatePassengerName(ticketId: string, newName: string) {
         revalidatePath('/dashboard/flights')
         return { success: true }
     } catch (error) {
-        console.error('Failed to update passenger name:', error)
-        return { success: false, error: 'Failed to update name' }
+        console.error('Falha ao atualizar nome do passageiro:', error)
+        return { success: false, error: 'Falha ao atualizar nome' }
     }
 }

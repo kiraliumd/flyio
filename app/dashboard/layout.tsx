@@ -15,6 +15,17 @@ export default async function DashboardLayout({
         redirect('/login')
     }
 
+    // Check if agency has completed onboarding
+    const { data: agency } = await supabase
+        .from('agencies')
+        .select('cnpj')
+        .eq('id', user.id)
+        .single()
+
+    if (!agency?.cnpj) {
+        redirect('/onboarding')
+    }
+
     return (
         <div className="flex h-screen overflow-hidden bg-gray-50">
             <DashboardSidebar />

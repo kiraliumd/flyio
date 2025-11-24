@@ -1,5 +1,5 @@
 import { supabaseAdmin } from '@/lib/supabase/admin';
-import { getFlightStatus } from '@/lib/aviation-stack';
+import { getRealTimeFlightStatus } from '@/lib/aviation-stack';
 import { addDays, endOfDay, startOfDay } from 'date-fns';
 
 export async function updateFlightStatus() {
@@ -32,14 +32,14 @@ export async function updateFlightStatus() {
         try {
             console.log(`Checking flight ${ticket.flight_number} (${ticket.pnr})...`);
 
-            const flightData = await getFlightStatus(ticket.flight_number);
+            const flightData = await getRealTimeFlightStatus(ticket.flight_number);
 
             if (!flightData) {
                 console.warn(`No data found for flight ${ticket.flight_number}`);
                 continue;
             }
 
-            const apiStatus = mapApiStatusToDbStatus(flightData.flight_status);
+            const apiStatus = flightData.status;
 
             // 3. Compare and update if different
             if (apiStatus !== ticket.status) {
@@ -63,15 +63,4 @@ export async function updateFlightStatus() {
     }
 
     console.log('Flight status update completed.');
-}
-
-function mapApiStatusToDbStatus(apiStatus: string): 'Confirmado' | 'Cancelado' | 'Voado' {
-    // AviationStack statuses: scheduled, active, landed, cancelled, incident, diverted
-    const status = apiStatus.toLowerCase();
-
-    if (status === 'cancelled') return 'Cancelado';
-    if (status === 'landed') return 'Voado';
-
-    // Default to Confirmado for scheduled, active, etc.
-    return 'Confirmado';
 }

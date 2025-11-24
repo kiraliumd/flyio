@@ -40,7 +40,7 @@ export async function fetchBookingDetails(pnr: string, lastname: string, airline
 
     if (!user) {
         console.error("❌ Erro Auth: Usuário nulo. Erro Supabase:", authError)
-        throw new Error(`User not authenticated. Cookies visíveis: ${allCookies.join(', ')}`)
+        throw new Error(`Usuário não autenticado. Cookies visíveis: ${allCookies.join(', ')}`)
     }
 
     console.log("✅ Usuário Autenticado:", user.id)
@@ -49,7 +49,27 @@ export async function fetchBookingDetails(pnr: string, lastname: string, airline
         // 2. Scrape Data
         const bookingDetails = await scrapeBooking(pnr, lastname, airline)
 
-        // 3. Inserção no Banco de Dados (Server-Side)
+        // 3. Get or Create Flight (Normalization)
+        const { data: flightData, error: flightError } = await supabase
+            .from('flights')
+            .upsert({
+                flight_number: bookingDetails.flightNumber,
+                departure_date: bookingDetails.departureDate,
+                origin: bookingDetails.origin,
+                destination: bookingDetails.destination,
+                status: 'Confirmado'
+            }, {
+                onConflict: 'flight_number, departure_date'
+            })
+            .select()
+            .single()
+
+        if (flightError) {
+            console.error('Error upserting flight:', flightError)
+            throw new Error('Falha ao registrar voo no sistema')
+        }
+
+        // 4. Inserção no Banco de Dados (Server-Side)
         const { error: dbError } = await supabase
             .from('tickets')
             .insert({
@@ -58,6 +78,8 @@ export async function fetchBookingDetails(pnr: string, lastname: string, airline
                 passenger_lastname: lastname.toUpperCase(),
                 passenger_name: 'Passageiro (Editar)',
                 airline: airline,
+                flight_id: flightData.id, // Link to Normalized Flight
+                // Legacy Columns (Redundancy for now)
                 flight_number: bookingDetails.flightNumber,
                 flight_date: bookingDetails.departureDate,
                 origin: bookingDetails.origin,
@@ -73,6 +95,6 @@ export async function fetchBookingDetails(pnr: string, lastname: string, airline
 
     } catch (error) {
         console.error(`Action failed for ${airline} ${pnr}:`, error)
-        throw new Error(`Failed to add flight: ${error instanceof Error ? error.message : 'Unknown error'}`)
+        throw new Error(`Falha ao adicionar voo: ${error instanceof Error ? error.message : 'Erro desconhecido'}`)
     }
 }
