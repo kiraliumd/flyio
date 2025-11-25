@@ -1,12 +1,5 @@
 import { AppSidebar } from "@/components/app-sidebar"
-import {
-    Breadcrumb,
-    BreadcrumbItem,
-    BreadcrumbLink,
-    BreadcrumbList,
-    BreadcrumbPage,
-    BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
+import { DashboardBreadcrumbs } from "@/components/dashboard-breadcrumbs"
 import { Separator } from "@/components/ui/separator"
 import {
     SidebarInset,
@@ -59,17 +52,7 @@ export default async function DashboardLayout({
                     <div className="w-full max-w-[1600px] mx-auto flex items-center gap-2">
                         <SidebarTrigger className="-ml-1" />
                         <Separator orientation="vertical" className="mr-2 h-4" />
-                        <Breadcrumb>
-                            <BreadcrumbList>
-                                <BreadcrumbItem>
-                                    <BreadcrumbLink href="/dashboard">Plataforma</BreadcrumbLink>
-                                </BreadcrumbItem>
-                                <BreadcrumbSeparator />
-                                <BreadcrumbItem>
-                                    <BreadcrumbPage>Visão Geral</BreadcrumbPage>
-                                </BreadcrumbItem>
-                            </BreadcrumbList>
-                        </Breadcrumb>
+                        <DashboardBreadcrumbs />
                     </div>
                 </header>
 

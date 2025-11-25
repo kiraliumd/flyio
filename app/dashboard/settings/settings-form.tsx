@@ -124,16 +124,37 @@ export function SettingsForm({ initialData, userEmail }: SettingsFormProps) {
                                         <Input
                                             id="logo"
                                             type="file"
-                                            accept="image/*"
+                                            accept="image/png, image/jpeg, image/jpg"
                                             className="cursor-pointer"
-                                            onChange={handleLogoUpload}
+                                            onChange={(e) => {
+                                                const file = e.target.files?.[0]
+                                                if (file) {
+                                                    if (!['image/png', 'image/jpeg', 'image/jpg'].includes(file.type)) {
+                                                        toast.error('Formato inválido. Use PNG ou JPG.')
+                                                        e.target.value = '' // Limpa o input
+                                                        return
+                                                    }
+                                                    if (file.size > 2 * 1024 * 1024) { // 2MB
+                                                        toast.error('Arquivo muito grande. Máximo 2MB.')
+                                                        e.target.value = '' // Limpa o input
+                                                        return
+                                                    }
+                                                    handleLogoUpload(e)
+                                                }
+                                            }}
                                             disabled={isUploading}
                                         />
                                         {isUploading && <Loader2 className="h-4 w-4 animate-spin" />}
                                     </div>
-                                    <p className="text-xs text-muted-foreground mt-2">
-                                        Esta logo será usada apenas nos cartões de embarque gerados para seus clientes.
-                                    </p>
+                                    <div className="mt-2 space-y-1">
+                                        <p className="text-xs text-muted-foreground">
+                                            Esta logo será usada apenas nos cartões de embarque gerados para seus clientes.
+                                        </p>
+                                        <div className="text-xs text-muted-foreground bg-slate-50 p-2 rounded border border-slate-100">
+                                            <strong>Formatos aceitos:</strong> PNG e JPG. <br />
+                                            <strong>Tamanho ideal:</strong> 200x200px (Quadrado). Máximo 2MB.
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 

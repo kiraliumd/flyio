@@ -109,16 +109,14 @@ export function BoardingPassClient({
             <div className="lg:col-span-2 bg-gray-100 rounded-xl border border-gray-200 p-8 flex items-start justify-center overflow-auto">
                 <div className="scale-75 lg:scale-90 xl:scale-100 transition-transform origin-top">
                     <div ref={componentRef} className="space-y-8 p-4 bg-gray-100 print:bg-white print:p-0">
-                        {passengers.map((passenger: any, index: number) => (
-                            <div key={index} className="print:break-after-page">
-                                <TicketLayout
-                                    passenger={passenger}
-                                    segments={segments}
-                                    agency={agency}
-                                    options={{ hasHandBag, hasCheckedBag, showAgencyLogo }}
-                                />
-                            </div>
-                        ))}
+                        <div className="print:break-after-page">
+                            <TicketLayout
+                                passengers={passengers}
+                                trips={ticket.itinerary_details?.trips || [{ type: 'IDA', segments: segments }]}
+                                agency={showAgencyLogo ? agency : undefined}
+                                options={{ hasHandBag, hasCheckedBag }}
+                            />
+                        </div>
                     </div>
                 </div>
             </div>
