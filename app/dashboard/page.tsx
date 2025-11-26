@@ -1,9 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Plane, CheckCircle, Clock, ArrowRight } from "lucide-react"
+import { Plane, CheckCircle, Clock, ArrowRight, Scale, ShieldCheck } from "lucide-react"
 import { createClient } from "@/lib/supabase/server"
 import Link from "next/link"
 import { calculateCheckinStatus, Airline } from "@/lib/business-rules"
-
+import { Badge } from '@/components/ui/badge'
+import { format } from 'date-fns'
 export default async function DashboardPage() {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -38,6 +39,28 @@ export default async function DashboardPage() {
 
         return flightDate >= now && flightDate <= tomorrow
     }).length || 0
+
+    // Legal Intelligence Logic
+    const legalOpportunities = tickets?.filter(t => {
+        const flightDateStr = t.flights?.departure_date || t.flight_date
+        if (!flightDateStr) return false
+
+        const flightDate = new Date(flightDateStr)
+        const now = new Date()
+        const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+
+        // Filter last 30 days
+        if (flightDate < thirtyDaysAgo || flightDate > now) return false
+
+        const status = t.flights?.status || t.status
+        const delay = t.flights?.delay_minutes || 0
+
+        // Cancelled OR Delayed > 4 hours (240 mins)
+        return status === 'Cancelado' || (status === 'Atrasado' && delay >= 240)
+    }) || []
+
+    const legalCount = legalOpportunities.length
+    const potentialValue = legalCount * 5000
 
     return (
         <div className="space-y-6">
@@ -86,6 +109,74 @@ export default async function DashboardPage() {
                         <p className="text-xs text-muted-foreground">Embarques confirmados para breve</p>
                     </CardContent>
                 </Card>
+            </div>
+
+            {/* Legal Intelligence Widget */}
+            <div className="rounded-lg border border-blue-100 bg-white p-6 shadow-sm">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <div className={`flex h-12 w-12 items-center justify-center rounded-full ${legalCount > 0 ? 'bg-blue-50' : 'bg-blue-50'}`}>
+                            {legalCount > 0 ? (
+                                <Scale className="h-6 w-6 text-blue-600" />
+                            ) : (
+                                <ShieldCheck className="h-6 w-6 text-blue-600" />
+                            )}
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-semibold text-slate-900">
+                                {legalCount > 0 ? 'Oportunidades Jurídicas Detectadas' : 'Monitoramento Ativo'}
+                            </h3>
+                            {legalCount > 0 ? (
+                                <p className="text-sm text-slate-500">
+                                    {legalCount} casos elegíveis nos últimos 30 dias.
+                                </p>
+                            ) : (
+                                <p className="text-sm text-muted-foreground">
+                                    Sua agência conta com assessoria jurídica gratuita da <span className="font-semibold text-blue-700">Aviar Soluções Aéreas</span> para casos elegíveis de atraso ou cancelamento.
+                                </p>
+                            )}
+                        </div>
+                    </div>
+                    {legalCount > 0 && (
+                        <div className="text-right">
+                            <p className="text-sm font-medium text-slate-500">Potencial Estimado</p>
+                            <p className="text-2xl font-bold text-blue-700">
+                                R$ {potentialValue.toLocaleString('pt-BR')}
+                            </p>
+                        </div>
+                    )}
+                </div>
+
+                {/* Simplified List of Opportunities */}
+                {legalCount > 0 && (
+                    <div className="mt-6 space-y-4">
+                        {legalOpportunities.sort((a, b) => new Date(b.flight_date).getTime() - new Date(a.flight_date).getTime()).map((ticket) => {
+                            const isCancelled = ticket.status === 'Cancelado' || ticket.flights?.status === 'Cancelado'
+                            const delay = ticket.flights?.delay_minutes || 0
+                            const flightDate = ticket.flights?.departure_date || ticket.flight_date
+                            // Data formatada simples: "24 nov"
+                            const dateStr = new Date(flightDate).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })
+
+                            return (
+                                <div key={ticket.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
+                                    {/* Lado Esquerdo: PNR e Data */}
+                                    <div className="flex flex-col">
+                                        <span className="font-mono text-sm font-bold text-slate-900 tracking-wide">
+                                            {ticket.pnr}
+                                        </span>
+                                        <span className="text-[10px] text-slate-500 uppercase font-medium">
+                                            {dateStr} • {ticket.origin}
+                                        </span>
+                                    </div>
+                                    {/* Lado Direito: Badge de Problema */}
+                                    <Badge variant={isCancelled ? "destructive" : "default"} className={`h-6 px-2 text-[10px] ${!isCancelled ? 'bg-orange-500 hover:bg-orange-600' : ''}`}>
+                                        {isCancelled ? 'Cancelado' : `Atraso ${(delay / 60).toFixed(0)}h`}
+                                    </Badge>
+                                </div>
+                            )
+                        })}
+                    </div>
+                )}
             </div>
         </div>
     )

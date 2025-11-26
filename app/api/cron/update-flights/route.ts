@@ -56,7 +56,7 @@ export async function GET(request: Request) {
                     .from('flights')
                     .update({
                         status: realTimeStatus.status,
-                        // Optionally update other fields if your schema supports them (e.g. actual times)
+                        delay_minutes: realTimeStatus.delay,
                     })
                     .eq('id', flight.id)
 

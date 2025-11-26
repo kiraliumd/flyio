@@ -21,11 +21,24 @@ import {
 
 export function AddFlightDialog() {
     const [open, setOpen] = useState(false)
+    const [step, setStep] = useState<'select-airline' | 'details'>('select-airline')
     const [pnr, setPnr] = useState('')
     const [lastName, setLastName] = useState('')
+    const [origin, setOrigin] = useState('')
     const [airline, setAirline] = useState<string>('')
     const [loading, setLoading] = useState(false)
     const router = useRouter()
+
+    const handleAirlineSelect = (selected: string) => {
+        setAirline(selected)
+        setStep('details')
+    }
+
+    const handleBack = () => {
+        setStep('select-airline')
+        setAirline('')
+        setOrigin('')
+    }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -37,7 +50,7 @@ export function AddFlightDialog() {
         setLoading(true)
 
         try {
-            await fetchBookingDetails(pnr, lastName, airline as any)
+            await fetchBookingDetails(pnr, lastName, airline as any, origin)
 
             toast.success('Voo adicionado com sucesso!')
             setOpen(false)
@@ -46,7 +59,9 @@ export function AddFlightDialog() {
             // Reset form
             setPnr('')
             setLastName('')
+            setOrigin('')
             setAirline('')
+            setStep('select-airline')
 
         } catch (error: any) {
             console.error(error)
@@ -57,7 +72,19 @@ export function AddFlightDialog() {
     }
 
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={open} onOpenChange={(val) => {
+            setOpen(val)
+            if (!val) {
+                // Reset on close
+                setTimeout(() => {
+                    setStep('select-airline')
+                    setAirline('')
+                    setOrigin('')
+                    setPnr('')
+                    setLastName('')
+                }, 300)
+            }
+        }}>
             <DialogTrigger asChild>
                 <Button>
                     <Plus className="mr-2 h-4 w-4" />
@@ -65,58 +92,99 @@ export function AddFlightDialog() {
                 </Button>
             </DialogTrigger>
             <DialogOverlay className="bg-black/25 backdrop-blur-sm" />
-            <DialogContent className="sm:max-w-[425px]">
+            <DialogContent className="sm:max-w-[500px]">
                 <DialogHeader>
-                    <DialogTitle>Adicionar Novo Voo</DialogTitle>
+                    <DialogTitle>
+                        {step === 'select-airline' ? 'Qual a companhia aérea?' : `Dados do Voo - ${airline}`}
+                    </DialogTitle>
                     <DialogDescription>
-                        Insira o PNR e os detalhes do passageiro para iniciar o monitoramento.
+                        {step === 'select-airline'
+                            ? 'Selecione a companhia para iniciar o monitoramento.'
+                            : 'Insira os dados da reserva para buscar o voo.'}
                     </DialogDescription>
                 </DialogHeader>
-                <form onSubmit={handleSubmit} className="grid gap-4 py-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="airline">Companhia Aérea</Label>
-                        <Select onValueChange={setAirline} value={airline} required>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Selecione a companhia" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="LATAM">LATAM</SelectItem>
-                                <SelectItem value="GOL">GOL</SelectItem>
-                                <SelectItem value="AZUL">AZUL</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="pnr">Código PNR</Label>
-                            <Input
-                                id="pnr"
-                                placeholder="PNR (6 dígitos)"
-                                value={pnr}
-                                onChange={(e) => setPnr(e.target.value)}
-                                required
-                                maxLength={20}
-                                className="uppercase"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="lastname">Sobrenome</Label>
-                            <Input
-                                id="lastname"
-                                placeholder="ex: SILVA"
-                                value={lastName}
-                                onChange={(e) => setLastName(e.target.value)}
-                                required
-                                className="uppercase"
-                            />
-                        </div>
-                    </div>
+                {step === 'select-airline' ? (
+                    <div className="grid grid-cols-3 gap-4 py-4">
+                        <button
+                            onClick={() => handleAirlineSelect('LATAM')}
+                            className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-slate-100 bg-white p-4 transition-all hover:border-blue-600 hover:bg-blue-50"
+                        >
+                            <div className="h-12 w-12 rounded-full bg-blue-900 flex items-center justify-center text-white font-bold text-xs">LATAM</div>
+                            <span className="font-medium text-slate-700">LATAM</span>
+                        </button>
 
-                    <Button type="submit" className="w-full" disabled={loading}>
-                        {loading ? 'Validando...' : 'Adicionar Voo'}
-                    </Button>
-                </form>
+                        <button
+                            onClick={() => handleAirlineSelect('GOL')}
+                            className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-slate-100 bg-white p-4 transition-all hover:border-orange-500 hover:bg-orange-50"
+                        >
+                            <div className="h-12 w-12 rounded-full bg-orange-500 flex items-center justify-center text-white font-bold text-xs">GOL</div>
+                            <span className="font-medium text-slate-700">GOL</span>
+                        </button>
+
+                        <button
+                            onClick={() => handleAirlineSelect('AZUL')}
+                            className="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-slate-100 bg-white p-4 transition-all hover:border-sky-500 hover:bg-sky-50"
+                        >
+                            <div className="h-12 w-12 rounded-full bg-sky-500 flex items-center justify-center text-white font-bold text-xs">AZUL</div>
+                            <span className="font-medium text-slate-700">AZUL</span>
+                        </button>
+                    </div>
+                ) : (
+                    <form onSubmit={handleSubmit} className="space-y-4 py-2">
+                        <div className="flex items-center mb-4">
+                            <Button variant="ghost" size="sm" onClick={handleBack} type="button" className="-ml-2 text-slate-500">
+                                ← Voltar
+                            </Button>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="pnr">Código PNR</Label>
+                                <Input
+                                    id="pnr"
+                                    placeholder="PNR (6 dígitos)"
+                                    value={pnr}
+                                    onChange={(e) => setPnr(e.target.value)}
+                                    required
+                                    maxLength={20}
+                                    className="uppercase font-mono"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="lastname">Sobrenome</Label>
+                                <Input
+                                    id="lastname"
+                                    placeholder="ex: SILVA"
+                                    value={lastName}
+                                    onChange={(e) => setLastName(e.target.value)}
+                                    required
+                                    className="uppercase"
+                                />
+                            </div>
+                        </div>
+
+                        {airline === 'GOL' && (
+                            <div className="space-y-2">
+                                <Label htmlFor="origin">Aeroporto de Origem (Sigla)</Label>
+                                <Input
+                                    id="origin"
+                                    placeholder="Ex: GRU, CGB, GIG"
+                                    value={origin}
+                                    onChange={(e) => setOrigin(e.target.value)}
+                                    required
+                                    maxLength={3}
+                                    className="uppercase font-mono"
+                                />
+                                <p className="text-xs text-muted-foreground">Obrigatório para reservas GOL.</p>
+                            </div>
+                        )}
+
+                        <Button type="submit" className="w-full mt-4" disabled={loading}>
+                            {loading ? 'Buscando Reserva...' : 'Adicionar Voo'}
+                        </Button>
+                    </form>
+                )}
             </DialogContent>
         </Dialog>
     )

@@ -5,7 +5,7 @@ import { cookies } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { scrapeBooking, type Airline } from '@/lib/scraper'
 
-export async function fetchBookingDetails(pnr: string, lastname: string, airline: Airline) {
+export async function fetchBookingDetails(pnr: string, lastname: string, airline: Airline, origin?: string) {
     // 1. Aguarde os cookies (Obrigatório no Next 16)
     const cookieStore = await cookies()
 
@@ -47,7 +47,7 @@ export async function fetchBookingDetails(pnr: string, lastname: string, airline
 
     try {
         // 2. Scrape Data
-        const bookingDetails = await scrapeBooking(pnr, lastname, airline)
+        const bookingDetails = await scrapeBooking(pnr, lastname, airline, origin)
 
         // 3. Get or Create Flight (Normalization)
         const { data: flightData, error: flightError } = await supabase
