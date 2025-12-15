@@ -1,54 +1,9 @@
 const { chromium } = require('playwright');
 
-const USER_AGENTS = [
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/121.0',
-    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/121.0'
-];
+// --- Helper Functions ---
+// (Mantidas para compatibilidade interna se necessário, mas o proxy será injetado pelo Worker)
 
-function getRandomUserAgent() {
-    return USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
-}
-
-function getProxyConfig() {
-    if (process.env.PROXY_SERVER) {
-        return {
-            server: process.env.PROXY_SERVER,
-            username: process.env.PROXY_USERNAME,
-            password: process.env.PROXY_PASSWORD
-        };
-    }
-    return undefined;
-}
-
-async function scrapeBooking(pnr, lastname, airline, origin) {
-    switch (airline) {
-        case 'LATAM':
-            return await scrapeLatam(pnr, lastname);
-        case 'GOL':
-            return await scrapeGol(pnr, lastname, origin);
-        case 'AZUL':
-            return await scrapeAzul(pnr, lastname, origin);
-        default:
-            throw new Error(`Airline ${airline} not supported`);
-    }
-}
-
-async function scrapeLatam(pnr, lastname) {
-    const browser = await chromium.launch({
-        headless: true,
-        proxy: getProxyConfig(),
-        args: ['--disable-blink-features=AutomationControlled', '--no-sandbox', '--disable-setuid-sandbox']
-    });
-
-    const context = await browser.newContext({
-        userAgent: getRandomUserAgent(),
-        viewport: { width: 1280, height: 720 }
-    });
-    const page = await context.newPage();
-
+async function scrapeLatam(page, pnr, lastname) {
     try {
         console.log(`Starting scrape for LATAM - PNR: ${pnr}`);
 
@@ -96,7 +51,8 @@ async function scrapeLatam(pnr, lastname) {
         await boardingPassBtn.waitFor({ state: 'visible', timeout: 15000 });
         console.log('Botão encontrado!');
 
-        const popupPromise = context.waitForEvent('page');
+        // Usar o contexto da página atual para esperar nova aba
+        const popupPromise = page.context().waitForEvent('page');
         await boardingPassBtn.click({ force: true });
 
         const newPage = await popupPromise;
@@ -178,204 +134,209 @@ async function scrapeLatam(pnr, lastname) {
 
     } catch (error) {
         console.error(`Scraping failed for LATAM ${pnr}:`, error);
-        await page.screenshot({ path: 'debug-fail-main.png', fullPage: true });
+        await page.screenshot({ path: `debug-fail-latam-${pnr}.png`, fullPage: true });
         throw new Error(`Failed to fetch booking details: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    } finally {
-        await browser.close();
     }
 }
 
-async function scrapeGol(pnr, lastname, origin) {
-    const browser = await chromium.launch({
-        headless: true,
-        slowMo: 100,
-        proxy: getProxyConfig(),
-        args: [
-            '--disable-blink-features=AutomationControlled',
-            '--start-maximized',
-            '--no-sandbox',
-            '--disable-setuid-sandbox',
-            '--disable-infobars',
-            '--window-position=0,0',
-            '--ignore-certificate-errors',
-            '--ignore-certificate-errors-spki-list',
-            '--disable-accelerated-2d-canvas',
-            '--disable-gpu',
-            '--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
-        ]
-    });
-
-    const context = await browser.newContext({
-        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-        viewport: { width: 1366, height: 768 },
-        locale: 'pt-BR',
-        timezoneId: 'America/Sao_Paulo',
-        deviceScaleFactor: 1,
-        hasTouch: false,
-        isMobile: false,
-        permissions: ['geolocation', 'notifications']
-    });
-
-    await context.addInitScript(() => {
-        Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
-        window.chrome = {
-            runtime: {},
-            loadTimes: function () { },
-            csi: function () { },
-            app: {}
-        };
-        const originalQuery = window.navigator.permissions.query;
-        window.navigator.permissions.query = (parameters) => (
-            parameters.name === 'notifications' ?
-                Promise.resolve({ state: Notification.permission }) :
-                originalQuery(parameters)
-        );
-        Object.defineProperty(navigator, 'plugins', {
-            get: () => [1, 2, 3, 4, 5],
-        });
-        Object.defineProperty(navigator, 'languages', {
-            get: () => ['pt-BR', 'pt', 'en-US', 'en'],
-        });
-    });
-
-    const page = await context.newPage();
-
-    let apiPromise = page.waitForResponse(res =>
+async function scrapeGol(page, pnr, lastname, origin) {
+    // 1. Setup de Listeners (API) antes de navegar
+    const apiPromise = page.waitForResponse(res =>
         res.status() === 200 &&
         (res.url().includes('retrieve') || res.url().includes('Booking')) &&
         res.headers()['content-type']?.includes('application/json'),
-        { timeout: 60000 }
+        { timeout: 30000 }
     ).catch(() => null);
 
+    console.log(`[GOL] Iniciando: ${pnr} (Origin: ${origin || 'N/A'})`);
+
     try {
-        console.log(`Starting scrape for GOL - PNR: ${pnr}`);
+        // 2. Navegação Inicial
+        await page.goto('https://b2c.voegol.com.br/minhas-viagens/encontrar-viagem', {
+            waitUntil: 'domcontentloaded',
+            timeout: 60000
+        });
 
-        try {
-            await page.goto('https://b2c.voegol.com.br/minhas-viagens/encontrar-viagem', {
-                waitUntil: 'commit',
-                timeout: 60000
-            });
-        } catch (e) {
-            console.error('Erro de conexão inicial GOL (Proxy?):', e);
-            throw new Error('Falha na conexão inicial com o site da GOL. Verifique o Proxy.');
-        }
-
-        try {
-            console.log('Aguardando inputs carregarem...');
-            await page.waitForSelector('input', { timeout: 45000 });
-        } catch (e) {
-            console.error('Site GOL não carregou inputs. Tentando screenshot...');
-            await page.screenshot({ path: 'debug-gol-load-fail.png' });
-            throw new Error('Site da GOL demorou demais para responder.');
-        }
-
+        // 3. Cookies (Melhoria: Locator com timeout curto para não travar)
         try {
             const cookieBtn = page.getByRole('button', { name: /aceitar|concordo|fechar/i }).first();
             if (await cookieBtn.isVisible({ timeout: 5000 })) {
-                console.log('Aceitando cookies...');
                 await cookieBtn.click();
-                await page.waitForTimeout(1000);
-            }
-        } catch (e) {
-        }
-
-        await page.mouse.move(Math.random() * 500, Math.random() * 500);
-        await page.waitForTimeout(500);
-
-        console.log('Tentando localizar inputs visualmente...');
-
-        const pnrInput = page.getByPlaceholder(/código|reserva/i).or(page.locator('input[type="text"]').nth(0));
-        await pnrInput.waitFor({ state: 'visible', timeout: 30000 });
-        await pnrInput.click({ force: true });
-        await page.waitForTimeout(300);
-        await pnrInput.fill(pnr);
-
-        if (origin) {
-            console.log(`Preenchendo Origem: ${origin}`);
-            const originInput = page.getByPlaceholder(/onde|origem/i).or(page.locator('input[type="text"]').nth(1));
-
-            await originInput.click({ force: true });
-            await originInput.clear();
-            await page.waitForTimeout(500);
-
-            await originInput.pressSequentially(origin, { delay: 200 + Math.random() * 100 });
-            console.log('Aguardando dropdown de sugestões...');
-            await page.waitForTimeout(2500);
-
-            try {
-                const suggestion = page.locator('li, div[role="option"], .m-list-item')
-                    .filter({ hasText: origin })
-                    .first();
-
-                if (await suggestion.isVisible({ timeout: 3000 })) {
-                    console.log('Sugestão encontrada visualmente. Clicando...');
-                    await suggestion.click({ force: true });
-                } else {
-                    throw new Error('Sugestão visual não apareceu');
-                }
-            } catch (e) {
-                console.log('Fallback: Tentando selecionar via Teclado (ArrowDown + Enter)...');
-                await originInput.press('ArrowDown');
-                await page.waitForTimeout(500);
-                await originInput.press('Enter');
-                await page.waitForTimeout(500);
-                await originInput.press('Tab');
-            }
-            await page.waitForTimeout(1000);
-        }
-
-        console.log('Preenchendo sobrenome...');
-        const lastnameInput = page.getByPlaceholder(/sobrenome/i).or(page.locator('input[type="text"]').nth(origin ? 2 : 1));
-        await lastnameInput.click({ force: true });
-        await page.waitForTimeout(300);
-        await lastnameInput.fill(lastname);
-
-        console.log('Preparando para buscar...');
-
-        const submitBtn = page.locator('button[type="submit"], button')
-            .filter({ hasText: /encontrar|buscar|continuar|pesquisar/i })
-            .first();
-
-        await submitBtn.waitFor({ state: 'visible', timeout: 10000 });
-
-        await page.waitForFunction(
-            el => el && !el.hasAttribute('disabled') && !el.classList.contains('disabled'),
-            await submitBtn.elementHandle()
-        ).catch(() => console.log('Aviso: Timeout esperando botão habilitar, tentando clicar mesmo assim...'));
-
-        const box = await submitBtn.boundingBox();
-        if (box) {
-            await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, { steps: 10 });
-            await page.waitForTimeout(200);
-            await page.mouse.down();
-            await page.waitForTimeout(100);
-            await page.mouse.up();
-        } else {
-            await submitBtn.click({ force: true });
-        }
-
-        try {
-            await page.waitForTimeout(3000);
-            if (page.url().includes('encontrar-viagem')) {
-                console.log('Tentativa 2: Pressionando ENTER...');
-                const inputToFocus = page.getByPlaceholder(/sobrenome/i).or(page.locator('input[type="text"]').nth(origin ? 2 : 1));
-                await inputToFocus.focus();
-                await page.keyboard.press('Enter');
             }
         } catch (e) { }
 
-        console.log('Aguardando dados da GOL...');
-        const response = await apiPromise;
+        // 4. Locators Dinâmicos (Sempre buscar o elemento fresco)
+        // SPA re-renderiza o DOM, então não guardamos handle em variáveis fora do escopo de uso imediato.
 
-        if (!response) {
-            throw new Error('API da GOL não respondeu ou timeout ocorreu.');
+        const pnrLocator = page.locator('input[name="codigoReserva"], #input-reservation-ticket').first();
+        const originLocator = page.locator('input[name="origem"], #input-departure').first();
+        const lastNameLocator = page.locator('input[name="sobrenome"], #input-last-name').first();
+        const submitBtn = page.locator('button[type="submit"], gds-button').filter({ hasText: /encontrar|continuar/i }).first();
+
+        // 5. Preenchimento (PNR)
+        console.log('[GOL] Preenchendo PNR...');
+        await pnrLocator.waitFor({ state: 'visible', timeout: 30000 });
+        await pnrLocator.fill(pnr);
+
+        // 6. Preenchimento (Origem - Robustez Extrema v2)
+        if (origin) {
+            console.log(`[GOL] Preenchendo Origem: ${origin}`);
+            await originLocator.waitFor({ state: 'visible' });
+            await originLocator.click();
+            await originLocator.clear();
+            await originLocator.pressSequentially(origin, { delay: 300 }); // Digitação MAIS lenta (300ms)
+
+            console.log(`[GOL] Aguardando autocomplete...`);
+
+            // Tenta esperar o autocomplete visual
+            let selectedVisual = false;
+            try {
+                const overlay = page.locator('.cdk-overlay-pane');
+                // Aumentando timeout para dar tempo do Angular processar
+                await overlay.waitFor({ state: 'visible', timeout: 5000 });
+
+                // Procura opção que contenha o código IATA e clica
+                const airportRegex = new RegExp(origin, 'i');
+                // Seletor mais amplo e permissivo. Pega o PRIMEIRO item se o filtro falhar.
+                const suggestions = overlay.locator('mat-option, gds-list-item, div[role="option"], li');
+
+                let targetSuggestion = suggestions.filter({ hasText: airportRegex }).first();
+
+                if (await targetSuggestion.isVisible({ timeout: 2000 })) {
+                    console.log('[GOL] Sugestão exata encontrada. Clicando...');
+                    await targetSuggestion.click();
+                    selectedVisual = true;
+                } else {
+                    console.log('[GOL] Sugestão exata não visível. Tentando pegar a primeira opção da lista...');
+                    targetSuggestion = suggestions.first();
+                    if (await targetSuggestion.isVisible({ timeout: 2000 })) {
+                        await targetSuggestion.click();
+                        selectedVisual = true;
+                        console.log('[GOL] Primeira sugestão clicada (Fallback Visual).');
+                    }
+                }
+            } catch (e) {
+                console.log(`[GOL] Autocomplete visual falhou (${e.message}). Iniciando Fallback Teclado...`);
+            }
+
+            if (!selectedVisual) {
+                // Fallback "Nuclear" Teclado
+                // Foca, Seta pra Baixo (2x para garantir), Enter
+                await originLocator.focus();
+                await page.waitForTimeout(500);
+                await page.keyboard.press('ArrowDown');
+                await page.waitForTimeout(300);
+                // Às vezes o primeiro ArrowDown apenas foca a lista, o segundo seleciona
+                // Mas geralmente 1 basta. Vamos tentar ser conservadores.
+                await page.keyboard.press('Enter');
+                console.log('[GOL] Fallback Teclado executado.');
+            }
+
+            // Verificação Final OBRIGATÓRIA
+            await page.waitForTimeout(1000); // Mais tempo para propagação
+            const finalValue = await originLocator.inputValue();
+            if (!finalValue.toUpperCase().includes(origin.toUpperCase())) {
+                console.error(`[GOL] Falha crítica na seleção de origem. Valor atual: "${finalValue}", Esperado: "${origin}"`);
+
+                // ULTIMATE ATTEMPT: Se falhou, tenta forçar o valor (pode não funcionar em SPA, mas vale tentar)
+                // console.log('[GOL] Tentando forçar valor no input via JS...');
+                // await originLocator.evaluate((el, val) => { el.value = val; el.dispatchEvent(new Event('input')); el.dispatchEvent(new Event('change')); }, origin);
+
+                throw new Error(`GOL: Falha ao selecionar aeroporto de origem ${origin}.`);
+            }
         }
 
-        const json = await response.json();
+        // 7. Preenchimento (Sobrenome)
+        console.log('[GOL] Preenchendo Sobrenome...');
+        await lastNameLocator.waitFor({ state: 'visible' });
+        await lastNameLocator.fill(lastname);
 
-        const pnrData = json?.response?.pnrRetrieveResponse?.pnr;
-        if (!pnrData) throw new Error('JSON inválido ou reserva não encontrada.');
+        // 8. Submit e Loop de Estabilidade
+        console.log('[GOL] Submetendo...');
+        await submitBtn.focus();
+        await submitBtn.click();
 
+        console.log('[GOL] Entrando no loop de estabilidade (40s)...');
+
+        // Setup Listener API
+        let latestApiResponse = null;
+        const responseListener = async (res) => {
+            if (res.status() === 200 &&
+                (res.url().includes('retrieve') || res.url().includes('Booking')) &&
+                res.headers()['content-type']?.includes('application/json')) {
+                try {
+                    const clone = await res.json().catch(() => null);
+                    if (clone && (clone.response?.pnrRetrieveResponse?.pnr || clone.pnr)) {
+                        latestApiResponse = clone;
+                    }
+                } catch (e) { }
+            }
+        };
+        page.on('response', responseListener);
+
+        const TIMEOUT = 40000;
+        const MIN_STABILITY_TIME = 2000; // 2s de estabilidade
+        const startTime = Date.now();
+        let stabilityStart = null;
+        let successDetected = false;
+
+        while (Date.now() - startTime < TIMEOUT) {
+            // A. Verificação de Erros Fatais
+            if (await page.locator('text=não foi encontrada').isVisible()) throw new Error('GOL: Reserva não encontrada.');
+            if (await page.locator('text=Verifique os dados').isVisible()) throw new Error('GOL: Dados inválidos.');
+
+            // B. Verificação do Loading (Especifico do Usuário)
+            // #loadMytravel gds-progress-bar > div
+            const isLoading = await page.locator('#loadMytravel gds-progress-bar > div').isVisible() ||
+                await page.locator('gds-loader, [role="progressbar"]').isVisible();
+
+            // C. Verificação de Sucesso (Resultado Visual)
+            const hasResult = await page.locator('text=Código da reserva').isVisible() ||
+                (await page.locator('text=' + pnr).count() > 0 && !isLoading);
+
+            if (isLoading) {
+                // Se está carregando, reseta estabilidade
+                if (stabilityStart) {
+                    // console.log('[GOL] Loading voltou. Resetando...');
+                    stabilityStart = null;
+                }
+            } else if (hasResult) {
+                // Se tem resultado e NÃO tem loading
+                if (!stabilityStart) {
+                    stabilityStart = Date.now();
+                    // console.log('[GOL] Estabilidade iniciada...');
+                } else {
+                    const duration = Date.now() - stabilityStart;
+                    if (duration >= MIN_STABILITY_TIME) {
+                        console.log(`[GOL] Estável por ${duration}ms. Sucesso confirmado.`);
+                        successDetected = true;
+                        break;
+                    }
+                }
+            } else {
+                // Nem loading nem resultado (estado transiente ou form voltou)
+                stabilityStart = null;
+            }
+
+            await page.waitForTimeout(500);
+        }
+
+        page.off('response', responseListener);
+
+        if (!successDetected) {
+            throw new Error('GOL: Timeout - Carregamento não estabilizou ou erro não detectado.');
+        }
+
+        if (!latestApiResponse) {
+            throw new Error('GOL: Visual ok, mas payload da API não foi capturado.');
+        }
+
+        const json = latestApiResponse;
+        const pnrData = json?.response?.pnrRetrieveResponse?.pnr || json?.pnr;
+
+        if (!pnrData) throw new Error('GOL: Estrutura JSON inválida.');
+
+        // 10. Parser (Mantido igual)
         const trips = pnrData.itinerary.itineraryParts.map((part, index) => {
             const segments = part.segments.map((seg) => ({
                 flightNumber: `${seg.flight.airlineCode}${seg.flight.flightNumber}`,
@@ -408,35 +369,15 @@ async function scrapeGol(pnr, lastname, origin) {
         };
 
     } catch (error) {
-        console.error(`GOL Scraper Error:`, error);
-        await page.screenshot({ path: 'error-gol-debug.png' });
+        console.error(`[GOL] Erro fatal: ${error.message}`);
+        // NÃO lançar screenshot aqui para produção.
+        // O erro será capturado pelo Worker e logado.
         throw error;
-    } finally {
-        await browser.close();
     }
 }
 
-async function scrapeAzul(pnr, lastname, origin) {
+async function scrapeAzul(page, pnr, origin) {
     if (!origin) throw new Error('Para buscar na Azul, é obrigatório informar o Aeroporto de Origem (ex: VCP).');
-
-    const browser = await chromium.launch({
-        headless: true,
-        slowMo: 200,
-        proxy: getProxyConfig(),
-        args: ['--disable-blink-features=AutomationControlled', '--start-maximized']
-    });
-
-    const context = await browser.newContext({
-        userAgent: getRandomUserAgent(),
-        viewport: { width: 1366, height: 768 },
-        locale: 'pt-BR'
-    });
-
-    await context.addInitScript(() => {
-        Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
-    });
-
-    const page = await context.newPage();
 
     try {
         console.log(`Starting scrape for AZUL - PNR: ${pnr} / Origin: ${origin}`);
@@ -542,11 +483,9 @@ async function scrapeAzul(pnr, lastname, origin) {
 
     } catch (error) {
         console.error(`Azul Scraper Error:`, error);
-        await page.screenshot({ path: 'error-azul-debug.png' });
+        await page.screenshot({ path: `error-azul-debug-${pnr}.png` });
         throw new Error('Falha ao processar reserva Azul.');
-    } finally {
-        await browser.close();
     }
 }
 
-module.exports = { scrapeBooking };
+module.exports = { scrapeGol, scrapeLatam, scrapeAzul };
