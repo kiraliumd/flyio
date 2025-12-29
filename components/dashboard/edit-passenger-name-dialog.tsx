@@ -7,7 +7,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import { updatePassengerName } from '@/app/actions/update-passenger-name'
-import { Pencil } from 'lucide-react'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { PencilIcon } from '@hugeicons/core-free-icons'
 import {
     Dialog,
     DialogContent,
@@ -62,7 +63,7 @@ export function EditPassengerNameDialog({ ticketId, currentName }: EditPassenger
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-primary">
-                    <Pencil className="h-4 w-4" />
+                    <HugeiconsIcon icon={PencilIcon} className="size-4" />
                     <span className="sr-only">Editar nome</span>
                 </Button>
             </DialogTrigger>

@@ -10,7 +10,12 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { updateAgencyProfile, uploadAgencyLogo } from '@/app/actions/settings'
-import { Loader2, UploadCloud, AlertTriangle } from 'lucide-react'
+import { HugeiconsIcon } from '@hugeicons/react'
+import {
+    Loading03Icon,
+    CloudUploadIcon,
+    Alert01Icon,
+} from '@hugeicons/core-free-icons'
 import Image from 'next/image'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { toast } from 'sonner'
@@ -144,7 +149,7 @@ export function SettingsForm({ initialData, userEmail }: SettingsFormProps) {
                                             }}
                                             disabled={isUploading}
                                         />
-                                        {isUploading && <Loader2 className="h-4 w-4 animate-spin" />}
+                                        {isUploading && <HugeiconsIcon icon={Loading03Icon} className="size-4 animate-spin" />}
                                     </div>
                                     <div className="mt-2 space-y-1">
                                         <p className="text-xs text-muted-foreground">
@@ -214,7 +219,7 @@ export function SettingsForm({ initialData, userEmail }: SettingsFormProps) {
 
                             {emailChanged && (
                                 <Alert variant="warning" className="mt-2 bg-yellow-50 border-yellow-200 text-yellow-800">
-                                    <AlertTriangle className="h-4 w-4" />
+                                    <HugeiconsIcon icon={Alert01Icon} className="size-4" />
                                     <AlertTitle>Atenção</AlertTitle>
                                     <AlertDescription>
                                         Ao alterar o e-mail, você precisará confirmar o novo endereço na sua caixa de entrada para fazer login novamente.
@@ -241,7 +246,7 @@ export function SettingsForm({ initialData, userEmail }: SettingsFormProps) {
                             <Button type="submit" disabled={isLoading}>
                                 {isLoading ? (
                                     <>
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        <HugeiconsIcon icon={Loading03Icon} className="mr-2 size-4 animate-spin" />
                                         Salvando...
                                     </>
                                 ) : (

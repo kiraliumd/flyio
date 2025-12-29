@@ -7,7 +7,7 @@ app.use(express.json());
 
 // Endpoint Principal
 app.post('/scrape', async (req, res) => {
-    const { airline, pnr, lastname, origin } = req.body;
+    const { airline, pnr, lastname, origin, agencyId } = req.body;
 
     if (!airline || !pnr || !lastname) {
         return res.status(400).json({ error: 'Missing required fields (airline, pnr, lastname)' });
@@ -21,7 +21,7 @@ app.post('/scrape', async (req, res) => {
         }
 
         // 2. Enfileira
-        const job = await addScrapeJob({ airline, pnr, lastname, origin });
+        const job = await addScrapeJob({ airline, pnr, lastname, origin, agencyId });
 
         return res.status(202).json({
             jobId: job.id,

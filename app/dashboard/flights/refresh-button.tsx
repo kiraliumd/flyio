@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { RefreshCw } from 'lucide-react'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { Refresh01Icon } from '@hugeicons/core-free-icons'
 import { refreshFlight } from '@/app/actions/refresh-flight'
 import { toast } from 'sonner'
 
@@ -34,7 +35,7 @@ export function RefreshButton({ ticketId, pnr, lastName, airline }: RefreshButto
 
     return (
         <Button size="sm" variant="ghost" onClick={handleRefresh} disabled={loading}>
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            <HugeiconsIcon icon={Refresh01Icon} className={`size-4 ${loading ? 'animate-spin' : ''}`} />
             <span className="sr-only">Refresh</span>
         </Button>
     )

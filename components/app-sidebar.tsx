@@ -1,12 +1,13 @@
 "use client"
 
 import * as React from "react"
+import { HugeiconsIcon } from "@hugeicons/react"
 import {
-    LayoutDashboard,
-    Plane,
-    Settings,
-    GalleryVerticalEnd,
-} from "lucide-react"
+    DashboardSquare01Icon,
+    Airplane01Icon,
+    Settings01Icon,
+    Activity01Icon,
+} from "@hugeicons/core-free-icons"
 
 import { NavUser } from "@/components/nav-user"
 import {
@@ -28,17 +29,17 @@ const navMain = [
     {
         title: "Painel",
         url: "/dashboard",
-        icon: LayoutDashboard,
+        icon: DashboardSquare01Icon,
     },
     {
         title: "Voos",
         url: "/dashboard/flights",
-        icon: Plane,
+        icon: Airplane01Icon,
     },
     {
         title: "Configurações",
         url: "/dashboard/settings",
-        icon: Settings,
+        icon: Settings01Icon,
     },
 ]
 
@@ -53,7 +54,7 @@ export function AppSidebar({ user }: { user: { name: string; email: string } }) 
                         <SidebarMenuButton size="lg" asChild>
                             <Link href="/dashboard">
                                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                                    <GalleryVerticalEnd className="size-4" />
+                                    <HugeiconsIcon icon={Activity01Icon} className="size-4" />
                                 </div>
                                 <div className="flex flex-col gap-0.5 leading-none">
                                     <span className="font-semibold">Flyio</span>
@@ -72,7 +73,7 @@ export function AppSidebar({ user }: { user: { name: string; email: string } }) 
                             <SidebarMenuItem key={item.title}>
                                 <SidebarMenuButton asChild isActive={pathname === item.url} tooltip={item.title}>
                                     <Link href={item.url}>
-                                        <item.icon />
+                                        <HugeiconsIcon icon={item.icon} />
                                         <span>{item.title}</span>
                                     </Link>
                                 </SidebarMenuButton>

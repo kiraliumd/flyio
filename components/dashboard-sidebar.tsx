@@ -2,7 +2,13 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Plane, Settings, LogOut } from 'lucide-react'
+import { HugeiconsIcon } from '@hugeicons/react'
+import {
+    DashboardSquare01Icon,
+    Airplane01Icon,
+    Settings01Icon,
+    Logout01Icon,
+} from "@hugeicons/core-free-icons"
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/components/auth-provider'
@@ -11,17 +17,17 @@ const sidebarItems = [
     {
         title: 'Painel',
         href: '/dashboard',
-        icon: LayoutDashboard,
+        icon: DashboardSquare01Icon,
     },
     {
         title: 'Voos',
         href: '/dashboard/flights',
-        icon: Plane,
+        icon: Airplane01Icon,
     },
     {
         title: 'Configurações',
         href: '/dashboard/settings',
-        icon: Settings,
+        icon: Settings01Icon,
     },
 ]
 
@@ -33,7 +39,7 @@ export function DashboardSidebar() {
         <div className="flex h-full w-full flex-col">
             <div className="flex h-14 items-center border-b border-sidebar-border px-6">
                 <Link href="/dashboard" className="flex items-center gap-2 font-semibold text-sidebar-foreground">
-                    <Plane className="h-6 w-6" />
+                    <HugeiconsIcon icon={Airplane01Icon} className="size-6" />
                     <span>Flyio</span>
                 </Link>
             </div>
@@ -50,7 +56,7 @@ export function DashboardSidebar() {
                                     : "text-sidebar-foreground/70"
                             )}
                         >
-                            <item.icon className="h-4 w-4" />
+                            <HugeiconsIcon icon={item.icon} className="size-4" />
                             {item.title}
                         </Link>
                     ))}
@@ -62,7 +68,7 @@ export function DashboardSidebar() {
                     className="w-full justify-start gap-2 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                     onClick={() => signOut()}
                 >
-                    <LogOut className="h-4 w-4" />
+                    <HugeiconsIcon icon={Logout01Icon} className="size-4" />
                     Sair
                 </Button>
             </div>

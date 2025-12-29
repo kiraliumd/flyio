@@ -1,7 +1,8 @@
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import QRCode from "react-qr-code";
-import { Plane, Luggage, Backpack } from "lucide-react";
+import { HugeiconsIcon } from '@hugeicons/react'
+import { Airplane01Icon, Luggage01Icon, Backpack01Icon } from "@hugeicons/core-free-icons";
 
 interface Trip {
   type: 'IDA' | 'VOLTA';
@@ -58,13 +59,13 @@ export function TicketLayout({ passengers, trips, agency, options }: TicketLayou
           <div className="flex gap-4">
             {options?.hasHandBag && (
               <div className="flex items-center gap-1 text-gray-600">
-                <Backpack className="h-4 w-4" />
+                <HugeiconsIcon icon={Backpack01Icon} className="size-4" />
                 <span className="text-xs font-bold">{passengers.length}x</span>
               </div>
             )}
             {options?.hasCheckedBag && (
               <div className="flex items-center gap-1 text-gray-600">
-                <Luggage className="h-4 w-4" />
+                <HugeiconsIcon icon={Luggage01Icon} className="size-4" />
                 <span className="text-xs font-bold">{passengers.length}x</span>
               </div>
             )}
@@ -97,7 +98,7 @@ export function TicketLayout({ passengers, trips, agency, options }: TicketLayou
                 {/* Cabeçalho da Seção */}
                 <div className={`px-4 py-2 text-xs font-bold uppercase tracking-wider flex items-center gap-2 ${trip.type === 'IDA' ? 'bg-blue-50 text-blue-700' : 'bg-orange-50 text-orange-700'
                   }`}>
-                  {trip.type === 'IDA' ? <Plane className="h-3 w-3" /> : <Plane className="h-3 w-3 rotate-180" />}
+                  {trip.type === 'IDA' ? <HugeiconsIcon icon={Airplane01Icon} className="size-3" /> : <HugeiconsIcon icon={Airplane01Icon} className="size-3 rotate-180" />}
                   {trip.type === 'IDA' ? 'Voo de Ida' : 'Voo de Volta'}
                 </div>
 
@@ -123,7 +124,7 @@ export function TicketLayout({ passengers, trips, agency, options }: TicketLayou
                           </div>
                         </div>
                         <div className="flex-1 px-4 flex justify-center">
-                          <Plane className="h-4 w-4 text-gray-300 rotate-90" />
+                          <HugeiconsIcon icon={Airplane01Icon} className="size-4 text-gray-300 rotate-90" />
                         </div>
                         <div className="text-right">
                           <div className="text-2xl font-bold text-gray-800">{seg.destination}</div>

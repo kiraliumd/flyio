@@ -1,5 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Plane, CheckCircle, Clock, ArrowRight, Scale, ShieldCheck } from "lucide-react"
+import { HugeiconsIcon } from '@hugeicons/react'
+import {
+    Airplane01Icon,
+    CheckmarkCircle01Icon,
+    Clock01Icon,
+    ArrowRight01Icon,
+    Legal01Icon,
+    Shield01Icon
+} from '@hugeicons/core-free-icons'
 import { createClient } from "@/lib/supabase/server"
 import Link from "next/link"
 import { calculateCheckinStatus, Airline } from "@/lib/business-rules"
@@ -71,7 +79,7 @@ export default async function DashboardPage() {
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Voos Ativos</CardTitle>
-                        <Plane className="h-4 w-4 text-blue-600" />
+                        <HugeiconsIcon icon={Airplane01Icon} className="size-4 text-blue-600" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{activeFlights}</div>
@@ -83,7 +91,7 @@ export default async function DashboardPage() {
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Check-in Aberto</CardTitle>
-                        <CheckCircle className="h-4 w-4 text-green-600" />
+                        <HugeiconsIcon icon={CheckmarkCircle01Icon} className="size-4 text-green-600" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{checkinOpenCount}</div>
@@ -91,7 +99,7 @@ export default async function DashboardPage() {
                             <p className="text-xs text-muted-foreground">Ação necessária</p>
                             {checkinOpenCount > 0 && (
                                 <Link href="/dashboard/flights" className="text-xs text-blue-600 flex items-center hover:underline">
-                                    Ver lista <ArrowRight className="h-3 w-3 ml-1" />
+                                    Ver lista <HugeiconsIcon icon={ArrowRight01Icon} className="size-3 ml-1" />
                                 </Link>
                             )}
                         </div>
@@ -102,7 +110,7 @@ export default async function DashboardPage() {
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Próximas 24h</CardTitle>
-                        <Clock className="h-4 w-4 text-orange-500" />
+                        <HugeiconsIcon icon={Clock01Icon} className="size-4 text-orange-500" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{next24hCount}</div>
@@ -117,9 +125,9 @@ export default async function DashboardPage() {
                     <div className="flex items-center gap-4">
                         <div className={`flex h-12 w-12 items-center justify-center rounded-full ${legalCount > 0 ? 'bg-blue-50' : 'bg-blue-50'}`}>
                             {legalCount > 0 ? (
-                                <Scale className="h-6 w-6 text-blue-600" />
+                                <HugeiconsIcon icon={Legal01Icon} className="size-6 text-blue-600" />
                             ) : (
-                                <ShieldCheck className="h-6 w-6 text-blue-600" />
+                                <HugeiconsIcon icon={Shield01Icon} className="size-6 text-blue-600" />
                             )}
                         </div>
                         <div>

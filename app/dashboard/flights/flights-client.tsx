@@ -29,14 +29,15 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { HugeiconsIcon } from '@hugeicons/react'
 import {
-    Download,
-    ExternalLink,
-    Filter,
-    HelpCircle,
-    Info,
-    Search,
-} from "lucide-react"
+    Download01Icon,
+    Link01Icon,
+    FilterIcon,
+    HelpCircleIcon,
+    InformationCircleIcon,
+    Search01Icon,
+} from "@hugeicons/core-free-icons"
 import { calculateCheckinStatus, getCheckinUrl } from "@/lib/business-rules"
 import { DeleteFlightButton } from "./delete-flight-button"
 import { EditPassengerNameDialog } from "@/components/dashboard/edit-passenger-name-dialog"
@@ -111,7 +112,7 @@ export function FlightsClient({ initialTickets }: FlightsClientProps) {
                     <CardHeader>
                         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                             <div className="relative flex-1 md:max-w-sm">
-                                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                <HugeiconsIcon icon={Search01Icon} className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
                                 <Input
                                     placeholder="Buscar por passageiro ou localizador..."
                                     className="pl-8"
@@ -120,7 +121,7 @@ export function FlightsClient({ initialTickets }: FlightsClientProps) {
                                 />
                             </div>
                             <div className="flex items-center gap-2">
-                                <Filter className="h-4 w-4 text-muted-foreground" />
+                                <HugeiconsIcon icon={FilterIcon} className="size-4 text-muted-foreground" />
                                 <Select
                                     value={airlineFilter}
                                     onValueChange={setAirlineFilter}
@@ -156,7 +157,7 @@ export function FlightsClient({ initialTickets }: FlightsClientProps) {
                                             <TooltipProvider>
                                                 <Tooltip>
                                                     <TooltipTrigger>
-                                                        <HelpCircle className="h-3 w-3 text-muted-foreground" />
+                                                        <HugeiconsIcon icon={HelpCircleIcon} className="size-3 text-muted-foreground" />
                                                     </TooltipTrigger>
                                                     <TooltipContent>
                                                         <p>
@@ -245,7 +246,7 @@ export function FlightsClient({ initialTickets }: FlightsClientProps) {
                                                     <div className="flex justify-end gap-2">
                                                         <Button size="icon" variant="ghost" asChild>
                                                             <Link href={`/dashboard/flights/${ticket.id}/boarding-pass`}>
-                                                                <Download className="h-4 w-4" />
+                                                                <HugeiconsIcon icon={Download01Icon} className="size-4" />
                                                             </Link>
                                                         </Button>
                                                         <Button size="icon" variant="ghost" asChild>
@@ -254,7 +255,7 @@ export function FlightsClient({ initialTickets }: FlightsClientProps) {
                                                                 target="_blank"
                                                                 rel="noopener noreferrer"
                                                             >
-                                                                <ExternalLink className="h-4 w-4" />
+                                                                <HugeiconsIcon icon={Link01Icon} className="size-4" />
                                                             </a>
                                                         </Button>
                                                         <DeleteFlightButton ticketId={ticket.id} />

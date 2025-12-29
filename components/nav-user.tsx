@@ -1,10 +1,11 @@
 "use client"
 
+import { HugeiconsIcon } from '@hugeicons/react'
 import {
-    ChevronsUpDown,
-    LogOut,
-    Sparkles,
-} from "lucide-react"
+    Sorting05Icon,
+    Logout01Icon,
+    SparklesIcon,
+} from "@hugeicons/core-free-icons"
 
 import {
     Avatar,
@@ -55,7 +56,7 @@ export function NavUser({
                                 <span className="truncate font-semibold">{user.name}</span>
                                 <span className="truncate text-xs">{user.email}</span>
                             </div>
-                            <ChevronsUpDown className="ml-auto size-4" />
+                            <HugeiconsIcon icon={Sorting05Icon} className="ml-auto size-4" />
                         </SidebarMenuButton>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
@@ -76,13 +77,13 @@ export function NavUser({
                         <DropdownMenuSeparator />
                         <DropdownMenuGroup>
                             <DropdownMenuItem>
-                                <Sparkles className="mr-2 h-4 w-4" />
+                                <HugeiconsIcon icon={SparklesIcon} className="mr-2 h-4 w-4" />
                                 Upgrade to Pro
                             </DropdownMenuItem>
                         </DropdownMenuGroup>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => signOut()}>
-                            <LogOut className="mr-2 h-4 w-4" />
+                            <HugeiconsIcon icon={Logout01Icon} className="mr-2 h-4 w-4" />
                             Log out
                         </DropdownMenuItem>
                     </DropdownMenuContent>

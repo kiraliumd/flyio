@@ -7,7 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
-import { Printer } from "lucide-react"
+import { HugeiconsIcon } from '@hugeicons/react'
+import { PrinterIcon } from "@hugeicons/core-free-icons"
 import { TicketLayout } from "@/components/boarding-pass/ticket-layout"
 
 interface BoardingPassClientProps {
@@ -98,7 +99,7 @@ export function BoardingPassClient({
 
                     <div className="pt-4">
                         <Button className="w-full" onClick={() => handlePrint()}>
-                            <Printer className="mr-2 h-4 w-4" />
+                            <HugeiconsIcon icon={PrinterIcon} className="mr-2 size-4" />
                             Gerar PDF / Imprimir
                         </Button>
                     </div>

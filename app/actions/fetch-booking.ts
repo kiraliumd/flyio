@@ -47,7 +47,7 @@ export async function fetchBookingDetails(pnr: string, lastname: string, airline
 
     try {
         // 2. Scrape Data
-        const bookingDetails = await scrapeBooking(pnr, lastname, airline, origin)
+        const bookingDetails = await scrapeBooking(pnr, lastname, airline, origin, user.id)
 
         // 3. Get or Create Flight (Normalization)
         const flightInsert = {

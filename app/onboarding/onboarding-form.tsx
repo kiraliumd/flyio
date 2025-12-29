@@ -7,10 +7,9 @@ import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { completeRegistration } from '@/app/actions/onboarding'
-import { Loader2 } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { Loading03Icon } from '@hugeicons/core-free-icons'
 
 const schema = z.object({
     full_name: z.string().min(3, 'Nome completo é obrigatório'),
@@ -24,10 +23,15 @@ type FormData = z.infer<typeof schema>
 export function OnboardingForm({ userEmail }: { userEmail: string }) {
     const [isLoading, setIsLoading] = useState(false)
     const [serverError, setServerError] = useState('')
-    const router = useRouter()
 
-    const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<FormData>({
+    const { register, handleSubmit, formState: { errors }, setValue } = useForm<FormData>({
         resolver: zodResolver(schema),
+        defaultValues: {
+            full_name: '', // We can try to guess or just leave it
+            name: '',
+            cnpj: '',
+            whatsapp: '(00) 00000-0000' // Placeholder for now or required?
+        }
     })
 
     const formatCNPJ = (value: string) => {
@@ -59,64 +63,58 @@ export function OnboardingForm({ userEmail }: { userEmail: string }) {
         formData.append('whatsapp', data.whatsapp)
 
         try {
-            // We can't use useFormState easily with react-hook-form's handleSubmit without some glue
-            // So we call the action directly. 
-            // Note: completeRegistration does a redirect on success, which throws an error in client components if not caught properly or handled.
-            // Actually, redirect in Server Actions works fine.
-
             const result = await completeRegistration(null, formData)
-
             if (result?.errors) {
-                // Handle field errors if any returned from server (though client validation should catch most)
                 console.error(result.errors)
+                setServerError('Por favor, revise os campos destacados.')
             } else if (result?.message) {
                 setServerError(result.message)
             }
         } catch (error) {
-            // Redirect throws an error "NEXT_REDIRECT" which is expected
-            // But usually Next.js handles it. If we catch it, we might prevent redirect.
-            // However, calling server action from client code:
-            // If it redirects, it should just work.
+            // Success usually redirects
         } finally {
             setIsLoading(false)
         }
     }
 
     return (
-        <Card className="w-full max-w-md mx-auto">
-            <CardHeader>
-                <CardTitle>Complete seu Cadastro</CardTitle>
-                <CardDescription>
-                    Precisamos de alguns dados para configurar sua agência.
-                </CardDescription>
-            </CardHeader>
-            <CardContent>
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="email">E-mail</Label>
-                        <Input id="email" value={userEmail} disabled className="bg-muted" />
-                    </div>
+        <div className="flex flex-col gap-8">
+            <div className="flex flex-col gap-2">
+                <h2 className="text-3xl font-bold tracking-tight">Bem-vindo ao Trigovo</h2>
+                <p className="text-muted-foreground">
+                    Vamos preparar tudo para você começar em menos de um minuto.
+                </p>
+            </div>
 
-                    <div className="space-y-2">
-                        <Label htmlFor="full_name">Nome do Responsável</Label>
-                        <Input
-                            id="full_name"
-                            placeholder="Ex: João Silva"
-                            {...register('full_name')}
-                        />
-                        {errors.full_name && <p className="text-sm text-red-500">{errors.full_name.message}</p>}
-                    </div>
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+                <div className="space-y-2">
+                    <Label htmlFor="email">E-mail</Label>
+                    <Input id="email" value={userEmail} disabled className="bg-muted/50 cursor-not-allowed" />
+                </div>
 
-                    <div className="space-y-2">
-                        <Label htmlFor="name">Nome da Agência</Label>
-                        <Input
-                            id="name"
-                            placeholder="Ex: Viaje Mais"
-                            {...register('name')}
-                        />
-                        {errors.name && <p className="text-sm text-red-500">{errors.name.message}</p>}
-                    </div>
+                <div className="space-y-2">
+                    <Label htmlFor="full_name">Seu nome completo</Label>
+                    <Input
+                        id="full_name"
+                        placeholder="Ex: João da Silva"
+                        {...register('full_name')}
+                        className={errors.full_name ? 'border-destructive' : ''}
+                    />
+                    {errors.full_name && <p className="text-xs font-medium text-destructive">{errors.full_name.message}</p>}
+                </div>
 
+                <div className="space-y-2">
+                    <Label htmlFor="name">Nome da agência</Label>
+                    <Input
+                        id="name"
+                        placeholder="Ex: Agência de Viagens Trigovo"
+                        {...register('name')}
+                        className={errors.name ? 'border-destructive' : ''}
+                    />
+                    {errors.name && <p className="text-xs font-medium text-destructive">{errors.name.message}</p>}
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
                         <Label htmlFor="cnpj">CNPJ</Label>
                         <Input
@@ -127,12 +125,13 @@ export function OnboardingForm({ userEmail }: { userEmail: string }) {
                                     setValue('cnpj', formatCNPJ(e.target.value))
                                 }
                             })}
+                            className={errors.cnpj ? 'border-destructive' : ''}
                         />
-                        {errors.cnpj && <p className="text-sm text-red-500">{errors.cnpj.message}</p>}
+                        {errors.cnpj && <p className="text-xs font-medium text-destructive">{errors.cnpj.message}</p>}
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="whatsapp">WhatsApp</Label>
+                        <Label htmlFor="whatsapp">WhatsApp / Telefone</Label>
                         <Input
                             id="whatsapp"
                             placeholder="(11) 99999-9999"
@@ -141,24 +140,30 @@ export function OnboardingForm({ userEmail }: { userEmail: string }) {
                                     setValue('whatsapp', formatPhone(e.target.value))
                                 }
                             })}
+                            className={errors.whatsapp ? 'border-destructive' : ''}
                         />
-                        {errors.whatsapp && <p className="text-sm text-red-500">{errors.whatsapp.message}</p>}
+                        {errors.whatsapp && <p className="text-xs font-medium text-destructive">{errors.whatsapp.message}</p>}
                     </div>
+                </div>
 
-                    {serverError && <p className="text-sm text-red-500 text-center">{serverError}</p>}
+                {serverError && (
+                    <div className="p-3 rounded-lg bg-destructive/10 text-destructive text-sm font-medium text-center">
+                        {serverError}
+                    </div>
+                )}
 
-                    <Button type="submit" className="w-full" disabled={isLoading}>
-                        {isLoading ? (
-                            <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Salvando...
-                            </>
-                        ) : (
-                            'Finalizar Cadastro'
-                        )}
-                    </Button>
-                </form>
-            </CardContent>
-        </Card>
+                <Button type="submit" className="w-full h-11 text-base" disabled={isLoading}>
+                    {isLoading ? (
+                        <>
+                            <HugeiconsIcon icon={Loading03Icon} className="mr-2 h-4 w-4 animate-spin" />
+                            Salvando informações…
+                        </>
+                    ) : (
+                        'Concluir cadastro'
+                    )}
+                </Button>
+            </form>
+        </div>
     )
 }
+

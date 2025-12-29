@@ -2,6 +2,7 @@ const { chromium: chromiumExtra } = require('playwright-extra');
 const stealth = require('puppeteer-extra-plugin-stealth');
 const fs = require('fs');
 const path = require('path');
+const supabase = require('./supabaseClient');
 
 // Ativa plugin stealth
 chromiumExtra.use(stealth());
@@ -10,17 +11,111 @@ chromiumExtra.use(stealth());
 const SESSION_FILE = path.join(__dirname, 'session_gol.json');
 
 // --- CONFIGURAÇÃO DE PROXY ---
-const PROXY_SERVER = 'http://p.webshare.io:80';
-const PROXY_PASSWORD = '5so72ui3knmj';
-const TOTAL_PROXIES = 250;
+const PROXY_SERVER = process.env.PROXY_SERVER || 'http://p.webshare.io:80';
+const PROXY_PASSWORD = process.env.PROXY_PASSWORD;
+const TOTAL_PROXIES = parseInt(process.env.TOTAL_PROXIES || '250');
+
+// Perfis para parecer mais humano
+const USER_AGENTS = [
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36'
+];
+
+function randomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function jitter(baseMs, jitterRatio = 0.35) {
+    const delta = baseMs * jitterRatio;
+    return baseMs + (Math.random() * 2 - 1) * delta;
+}
+
+async function humanPause(baseMs = 400) {
+    return new Promise(resolve => setTimeout(resolve, jitter(baseMs)));
+}
 
 function getRandomProxy() {
-    const randomIndex = Math.floor(Math.random() * TOTAL_PROXIES) + 1;
+    const randomIndex = randomInt(1, TOTAL_PROXIES);
     return {
         server: PROXY_SERVER,
         username: `xtweuspr-BR-${randomIndex}`,
         password: PROXY_PASSWORD
     };
+}
+
+async function humanMouseMove(page) {
+    const { width, height } = page.viewportSize();
+    const targetX = randomInt(width * 0.2, width * 0.8);
+    const targetY = randomInt(height * 0.2, height * 0.8);
+    await page.mouse.move(targetX, targetY, { steps: randomInt(8, 15) });
+    await humanPause(250);
+}
+
+async function humanClick(page, locator) {
+    const box = await locator.boundingBox().catch(() => null);
+    if (box) {
+        const x = box.x + box.width * Math.random();
+        const y = box.y + box.height * Math.random();
+        await page.mouse.move(x, y, { steps: randomInt(5, 10) });
+        await humanPause(120);
+        await page.mouse.down();
+        await humanPause(80);
+        await page.mouse.up();
+    } else {
+        await locator.click({ delay: jitter(80) });
+    }
+}
+
+async function humanType(locator, text, minDelay = 60, maxDelay = 140) {
+    for (const ch of text) {
+        await locator.type(ch, { delay: randomInt(minDelay, maxDelay) });
+    }
+}
+
+async function warmup(page) {
+    await humanMouseMove(page);
+    await page.keyboard.down('Shift');
+    await page.keyboard.up('Shift');
+    await humanPause(300);
+}
+
+async function applyHumanHeaders(page) {
+    await page.setExtraHTTPHeaders({
+        'accept-language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
+        'dnt': '1',
+        'sec-ch-ua': '"Chromium";v="120", "Not(A:Brand";v="8", "Google Chrome";v="120"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"Windows"'
+    });
+}
+
+function buildContextOptions(base = {}) {
+    const userAgent = USER_AGENTS[randomInt(0, USER_AGENTS.length - 1)];
+    const viewport = { width: randomInt(1280, 1680), height: randomInt(720, 1050) };
+    return {
+        viewport,
+        userAgent,
+        locale: 'pt-BR',
+        timezoneId: 'America/Sao_Paulo',
+        colorScheme: 'light',
+        permissions: ['geolocation'],
+        geolocation: { latitude: -23.5505, longitude: -46.6333 },
+        ...base
+    };
+}
+
+async function applyAntiBotScripts(context) {
+    await context.addInitScript(() => {
+        Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+        Object.defineProperty(navigator, 'platform', { get: () => 'Win32' });
+        Object.defineProperty(navigator, 'hardwareConcurrency', { get: () => 8 });
+        Object.defineProperty(navigator, 'deviceMemory', { get: () => 8 });
+        Object.defineProperty(Notification, 'permission', { get: () => 'default' });
+        window.chrome = window.chrome || { runtime: {} };
+        window.navigator.languages = ['pt-BR', 'pt', 'en-US'];
+        window.navigator.plugins = [{ name: 'Chrome PDF Plugin' }];
+    });
 }
 
 async function launchBrowser(useProxy) {
@@ -34,8 +129,9 @@ async function launchBrowser(useProxy) {
     }
 
     return await chromiumExtra.launch({
-        headless: true, // Em produção, true
+        headless: process.env.PLAYWRIGHT_HEADLESS !== 'false',
         proxy: proxyConfig,
+        slowMo: randomInt(35, 95),
         args: [
             '--disable-blink-features=AutomationControlled',
             '--start-maximized',
@@ -50,7 +146,7 @@ async function launchBrowser(useProxy) {
 // ============================================================================
 // 1. GOL (Mantido o código funcional com TAB)
 // ============================================================================
-async function scrapeGol({ pnr, lastname, origin, useProxy }) {
+async function scrapeGol({ pnr, lastname, origin, useProxy, agencyId }) {
     if (typeof pnr !== 'string' || typeof lastname !== 'string') throw new Error('Dados inválidos.');
 
     let browser = null;
@@ -58,22 +154,32 @@ async function scrapeGol({ pnr, lastname, origin, useProxy }) {
         console.log(`🖥️ [GOL] Iniciando: ${pnr} (${lastname}) | Proxy: ${useProxy ? 'SIM' : 'NÃO'}`);
         browser = await launchBrowser(useProxy);
 
-        let contextOptions = {
-            viewport: { width: 1920, height: 1080 },
-            locale: 'pt-BR',
-            timezoneId: 'America/Sao_Paulo',
-            ignoreHTTPSErrors: true
-        };
+        let contextOptions = buildContextOptions({ ignoreHTTPSErrors: true });
 
-        if (fs.existsSync(SESSION_FILE)) {
+        // Tenta carregar sessão do Supabase (por Agência)
+        if (agencyId && supabase) {
+            console.log(`📥 Carregando sessão GOL do banco para a agência: ${agencyId}`);
             try {
-                contextOptions.storageState = JSON.parse(fs.readFileSync(SESSION_FILE, 'utf8'));
-            } catch (e) { }
+                const { data: agency } = await supabase
+                    .from('agencies')
+                    .select('gol_session')
+                    .eq('id', agencyId)
+                    .single();
+
+                if (agency?.gol_session) {
+                    contextOptions.storageState = agency.gol_session;
+                    console.log('✅ Sessão carregada do banco.');
+                }
+            } catch (e) {
+                console.warn('⚠️ Falha ao ler sessão do banco:', e.message);
+            }
         }
 
         const context = await browser.newContext(contextOptions);
-        await context.addInitScript(() => Object.defineProperty(navigator, 'webdriver', { get: () => undefined }));
+        await applyAntiBotScripts(context);
         const page = await context.newPage();
+        await applyHumanHeaders(page);
+        await warmup(page);
 
         const apiPromise = page.waitForResponse(
             res => res.status() === 200 &&
@@ -90,14 +196,14 @@ async function scrapeGol({ pnr, lastname, origin, useProxy }) {
         const inputOrigin = page.locator('#input-departure');
         const inputLastname = page.locator('#input-last-name');
 
-        await inputPnr.click();
+        await humanClick(page, inputPnr);
         await inputPnr.press('Control+A'); await inputPnr.press('Backspace');
-        await inputPnr.pressSequentially(pnr, { delay: 200 });
+        await humanType(inputPnr, pnr);
 
         console.log(`✈️ Selecionando Origem: ${origin}...`);
-        await inputOrigin.click();
+        await humanClick(page, inputOrigin);
         await inputOrigin.press('Control+A'); await inputOrigin.press('Backspace');
-        await inputOrigin.pressSequentially(origin, { delay: 400 });
+        await humanType(inputOrigin, origin, 90, 180);
 
         await page.waitForTimeout(2500);
 
@@ -106,9 +212,9 @@ async function scrapeGol({ pnr, lastname, origin, useProxy }) {
         await page.keyboard.press('Tab'); await page.waitForTimeout(500);
         await page.keyboard.press('Enter'); await page.waitForTimeout(1000);
 
-        await inputLastname.click();
+        await humanClick(page, inputLastname);
         await inputLastname.press('Control+A'); await inputLastname.press('Backspace');
-        await inputLastname.pressSequentially(lastname, { delay: 200 });
+        await humanType(inputLastname, lastname, 80, 160);
 
         console.log('Buscando...');
         const submitBtn = page.locator('#submit-button').filter({ hasText: /Continuar/i }).first();
@@ -120,7 +226,7 @@ async function scrapeGol({ pnr, lastname, origin, useProxy }) {
 
         while (attempts < 3 && !success) {
             attempts++;
-            if (await submitBtn.isEnabled()) await submitBtn.click();
+            if (await submitBtn.isEnabled()) await humanClick(page, submitBtn);
             else await inputLastname.press('Enter');
 
             try {
@@ -140,10 +246,21 @@ async function scrapeGol({ pnr, lastname, origin, useProxy }) {
             } catch (e) { }
         }
 
-        try {
-            const storage = await context.storageState();
-            fs.writeFileSync(SESSION_FILE, JSON.stringify(storage));
-        } catch (e) { }
+        // Salva a sessão no Supabase após o processamento
+        if (agencyId && supabase) {
+            try {
+                const storage = await context.storageState();
+                const { error } = await supabase
+                    .from('agencies')
+                    .update({ gol_session: storage })
+                    .eq('id', agencyId);
+
+                if (error) throw error;
+                console.log(`📤 Sessão GOL salva no banco para a agência: ${agencyId}`);
+            } catch (e) {
+                console.warn('⚠️ Falha ao salvar sessão no banco:', e.message);
+            }
+        }
 
         const apiResponse = await apiPromise;
         if (apiResponse) {
@@ -177,21 +294,60 @@ async function scrapeGol({ pnr, lastname, origin, useProxy }) {
 }
 
 function parseGolJson(pnrData, pnr, origin, useProxy) {
-    const segment = pnrData.itinerary.itineraryParts[0].segments[0];
-    const passengers = pnrData.passengers.map(p => ({
-        name: `${p.passengerDetails.firstName} ${p.passengerDetails.lastName}`.toUpperCase(),
-        seat: "Check-in não feito",
-        baggage: { hasChecked: false }
-    }));
+    if (!pnrData || !pnrData.itinerary || !pnrData.itinerary.itineraryParts) {
+        throw new Error('PNR data structure is invalid');
+    }
+
+    const trips = pnrData.itinerary.itineraryParts.map((part, index) => {
+        const segments = part.segments.map(seg => ({
+            flightNumber: `${seg.flight.airlineCode}${seg.flight.flightNumber}`,
+            origin: seg.origin,
+            destination: seg.destination,
+            date: seg.departure,
+            departureDate: seg.departure,
+            arrivalDate: seg.arrival,
+            duration: `${Math.floor(seg.duration / 60)}h ${seg.duration % 60}m`,
+            status: seg.segmentStatusCode?.segmentStatus || 'CONFIRMED'
+        }));
+        return {
+            type: index === 0 ? 'IDA' : 'VOLTA',
+            segments: segments
+        };
+    });
+
+    const firstLeg = trips[0].segments[0];
+    const lastTrip = trips[trips.length - 1];
+    const lastLeg = lastTrip.segments[lastTrip.segments.length - 1];
+
+    const passengers = pnrData.passengers.map(p => {
+        // Tenta encontrar o assento no primeiro segmento
+        let seat = "Assento não marcado";
+        // GOL JSON structure for seats is usually in segments or SSRs, 
+        // but often not present in the main PNR object until check-in.
+
+        return {
+            name: `${p.passengerDetails.firstName} ${p.passengerDetails.lastName}`.toUpperCase(),
+            seat: seat,
+            baggage: {
+                hasPersonalItem: true,
+                hasCarryOn: true,
+                hasChecked: false // GOL doesn't always show this clearly in this JSON
+            }
+        };
+    });
+
     return {
-        flightNumber: `${segment.flight.airlineCode}${segment.flight.flightNumber}`,
-        departureDate: segment.departure,
-        origin: segment.origin,
-        destination: segment.destination,
-        status: 'Confirmado',
-        pnr,
+        flightNumber: firstLeg.flightNumber,
+        departureDate: firstLeg.departureDate,
+        origin: firstLeg.origin,
+        destination: lastLeg.destination,
+        status: firstLeg.status === 'CONFIRMED' ? 'Confirmado' : 'Outro',
+        pnr: pnr,
         method: useProxy ? 'Proxy' : 'Direct',
-        itinerary_details: { trips: [], passengers }
+        itinerary_details: {
+            trips: trips,
+            passengers: passengers
+        }
     };
 }
 
@@ -204,8 +360,11 @@ async function scrapeLatam({ pnr, lastname, useProxy }) {
         console.log(`✈️ [LATAM] Iniciando: ${pnr} | Proxy: ${useProxy ? 'SIM' : 'NÃO'}`);
         browser = await launchBrowser(useProxy);
 
-        const context = await browser.newContext({ viewport: { width: 1366, height: 768 } });
+        const context = await browser.newContext(buildContextOptions());
+        await applyAntiBotScripts(context);
         const page = await context.newPage();
+        await applyHumanHeaders(page);
+        await warmup(page);
 
         // Listener genérico
         const apiPromise = page.waitForResponse(
@@ -314,8 +473,11 @@ async function scrapeAzul({ pnr, origin, useProxy }) {
     try {
         console.log(`✈️ [AZUL] Iniciando: ${pnr} | Proxy: ${useProxy ? 'SIM' : 'NÃO'}`);
         browser = await launchBrowser(useProxy);
-        const context = await browser.newContext({ viewport: { width: 1366, height: 768 } });
+        const context = await browser.newContext(buildContextOptions());
+        await applyAntiBotScripts(context);
         const page = await context.newPage();
+        await applyHumanHeaders(page);
+        await warmup(page);
         const apiPromise = page.waitForResponse(async res => {
             if (res.status() !== 200) return false;
             try { const body = await res.json(); return body.data?.journeys || body.journeys; } catch (e) { return false; }

@@ -8,7 +8,8 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { toast } from 'sonner'
 import { fetchBookingDetails } from '@/app/actions/fetch-booking'
-import { Plus } from 'lucide-react'
+import { HugeiconsIcon } from '@hugeicons/react'
+import { PlusSignIcon } from '@hugeicons/core-free-icons'
 import {
     Dialog,
     DialogContent,
@@ -91,7 +92,7 @@ export function AddFlightDialog() {
         }}>
             <DialogTrigger asChild>
                 <Button>
-                    <Plus className="mr-2 h-4 w-4" />
+                    <HugeiconsIcon icon={PlusSignIcon} className="mr-2 size-4" />
                     Adicionar Voo
                 </Button>
             </DialogTrigger>

@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { AuthLayout } from '@/components/auth/auth-layout'
 import { OnboardingForm } from './onboarding-form'
 
 export default async function OnboardingPage() {
@@ -10,12 +11,7 @@ export default async function OnboardingPage() {
         redirect('/login')
     }
 
-    // Check if already registered? 
-    // Maybe not strictly required by prompt, but good UX. 
-    // If agency exists and has name/cnpj, maybe redirect to dashboard?
-    // User said "logo após o primeiro login", implying it's for new users.
-    // I'll check if data exists to avoid stuck loop if they go back.
-
+    // Check if agency has already completed onboarding
     const { data: agency } = await supabase
         .from('agencies')
         .select('name, cnpj')
@@ -27,8 +23,17 @@ export default async function OnboardingPage() {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
+        <AuthLayout
+            title="Projetado para execução controlada."
+            subtitle="O Trigovo é infraestrutura, não um script frágil."
+            bullets={[
+                "Escalabilidade automática via infraestrutura de Cloud",
+                "Execução determinística em ambientes heterogêneos",
+                "Garantia de entrega com persistência em fila"
+            ]}
+            footerText="Projetado por engenheiros para engenheiros."
+        >
             <OnboardingForm userEmail={user.email || ''} />
-        </div>
+        </AuthLayout>
     )
 }

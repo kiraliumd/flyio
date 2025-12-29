@@ -22,14 +22,14 @@ function startWorker() {
     workerInstance = new Worker(
         'scrape-queue',
         async (job) => {
-            const { airline, pnr, lastname, origin } = job.data;
+            const { airline, pnr, lastname, origin, agencyId } = job.data;
             const logPrefix = `[Job ${job.id} | ${airline} ${pnr}]`;
 
             console.log(`${logPrefix} 🚀 Iniciando processamento...`);
 
             // Função auxiliar para chamar o scraper correto
             const executeScraper = async (useProxy) => {
-                const params = { pnr, lastname, origin, useProxy }; // Passa a flag useProxy
+                const params = { pnr, lastname, origin, useProxy, agencyId }; // Passa o agencyId
 
                 if (airline === 'GOL') return await scrapers.scrapeGol(params);
                 if (airline === 'LATAM') return await scrapers.scrapeLatam(params);

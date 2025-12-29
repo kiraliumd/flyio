@@ -16,6 +16,7 @@ create table agencies (
   name text,
   email text,
   subscription_plan text default 'free',
+  gol_session jsonb,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   updated_at timestamp with time zone default timezone('utc'::text, now()) not null
 );

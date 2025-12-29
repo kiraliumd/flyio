@@ -24,7 +24,7 @@ function getRandomUserAgent() {
 
 const SCRAPER_SERVICE_URL = process.env.SCRAPER_SERVICE_URL || 'https://scraper-voos-905122424233.southamerica-east1.run.app/scrape';
 
-export async function scrapeBooking(pnr: string, lastname: string, airline: Airline, origin?: string): Promise<BookingDetails> {
+export async function scrapeBooking(pnr: string, lastname: string, airline: Airline, origin?: string, agencyId?: string): Promise<BookingDetails> {
     // Se estivermos em produção ou forçado via ENV, usa o Cloud Run
     const useCloud = process.env.NODE_ENV === 'production' || process.env.USE_CLOUD_SCRAPER === 'true';
 
@@ -35,7 +35,7 @@ export async function scrapeBooking(pnr: string, lastname: string, airline: Airl
             const submitResponse = await fetch(SCRAPER_SERVICE_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ pnr, lastname, airline, origin }),
+                body: JSON.stringify({ pnr, lastname, airline, origin, agencyId }),
                 cache: 'no-store'
             });
 
@@ -507,9 +507,8 @@ async function scrapeGol(pnr: string, lastname: string, origin?: string): Promis
         }
 
         const json = await response.json();
+        const pnrData = json?.response?.pnrRetrieveResponse?.pnr || json?.pnrRetrieveResponse?.pnr;
 
-        // --- PARSE DOS DADOS ---
-        const pnrData = json?.response?.pnrRetrieveResponse?.pnr;
         if (!pnrData) throw new Error('JSON inválido ou reserva não encontrada.');
 
         const trips = pnrData.itinerary.itineraryParts.map((part: any, index: number) => {
@@ -518,22 +517,27 @@ async function scrapeGol(pnr: string, lastname: string, origin?: string): Promis
                 origin: seg.origin,
                 destination: seg.destination,
                 date: seg.departure,
+                departureDate: seg.departure,
                 arrivalDate: seg.arrival,
                 duration: `${Math.floor(seg.duration / 60)}h ${seg.duration % 60}m`,
-                airline: 'GOL'
+                status: seg.segmentStatusCode?.segmentStatus || 'CONFIRMED'
             }));
-            return { type: index === 0 ? 'IDA' : 'VOLTA', segments };
+            return {
+                type: index === 0 ? 'IDA' : 'VOLTA',
+                segments: segments
+            };
         });
+
+        const firstLeg = trips[0].segments[0];
+        const lastTrip = trips[trips.length - 1];
+        const lastLeg = lastTrip.segments[lastTrip.segments.length - 1];
 
         const passengerList = pnrData.passengers.map((p: any) => ({
             name: `${p.passengerDetails.firstName} ${p.passengerDetails.lastName}`.toUpperCase(),
-            seat: "Não marcado",
+            seat: "Assento não marcado",
             group: "—",
             baggage: { hasPersonalItem: true, hasCarryOn: true, hasChecked: false }
         }));
-
-        const firstLeg = trips[0].segments[0];
-        const lastLeg = trips[0].segments[trips[0].segments.length - 1];
 
         return {
             flightNumber: firstLeg.flightNumber,
