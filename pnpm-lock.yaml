@@ -88,10 +88,7 @@ importers:
         version: 17.2.3
       inngest:
         specifier: ^3.45.1
-        version: 3.46.0(@opentelemetry/core@2.2.0(@opentelemetry/api@1.9.0))(next@16.0.3(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(typescript@5.9.3)(zod@4.1.13)
-      lucide-react:
-        specifier: ^0.554.0
-        version: 0.554.0(react@19.2.0)
+        version: 3.46.0(@opentelemetry/core@2.2.0(@opentelemetry/api@1.9.0))(next@16.0.3(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(typescript@5.9.3)(zod@4.2.1)
       next:
         specifier: ^16.0.3
         version: 16.0.3(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -132,8 +129,8 @@ importers:
         specifier: ^10.9.2
         version: 10.9.2(@types/node@24.10.1)(typescript@5.9.3)
       zod:
-        specifier: ^4.1.13
-        version: 4.1.13
+        specifier: ^4.2.1
+        version: 4.2.1
     devDependencies:
       '@types/node':
         specifier: ^24.10.1
@@ -3060,11 +3057,6 @@ packages:
   lru-cache@5.1.1:
     resolution: {integrity: sha512-KpNARQA3Iwv+jTA0utUVVbrh+Jlrr1Fv0e56GGzAFOXN7dk/FviaDW8LHmK52DlcH4WP2n6gI8vN1aesBFgo9w==}
 
-  lucide-react@0.554.0:
-    resolution: {integrity: sha512-St+z29uthEJVx0Is7ellNkgTEhaeSoA42I7JjOCBCrc5X6LYMGSv0P/2uS5HDLTExP5tpiqRD2PyUEOS6s9UXA==}
-    peerDependencies:
-      react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
-
   magic-string@0.30.21:
     resolution: {integrity: sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==}
 
@@ -3823,8 +3815,8 @@ packages:
     peerDependencies:
       zod: ^3.25.0 || ^4.0.0
 
-  zod@4.1.13:
-    resolution: {integrity: sha512-AvvthqfqrAhNH9dnfmrfKzX5upOdjUVJYFqNSlkmGf64gRaTzlPwz99IHYnVs28qYAybvAlBV+H7pn0saFY4Ig==}
+  zod@4.2.1:
+    resolution: {integrity: sha512-0wZ1IRqGGhMP76gLqz8EyfBXKk0J2qo2+H3fi4mcUP/KtTocoX08nmIAHl1Z2kJIZbZee8KOpBCSNPRgauucjw==}
 
 snapshots:
 
@@ -6382,8 +6374,8 @@ snapshots:
       '@babel/parser': 7.28.5
       eslint: 9.39.1(jiti@2.6.1)
       hermes-parser: 0.25.1
-      zod: 4.1.13
-      zod-validation-error: 4.0.2(zod@4.1.13)
+      zod: 4.2.1
+      zod-validation-error: 4.0.2(zod@4.2.1)
     transitivePeerDependencies:
       - supports-color
 
@@ -6697,7 +6689,7 @@ snapshots:
 
   inherits@2.0.4: {}
 
-  inngest@3.46.0(@opentelemetry/core@2.2.0(@opentelemetry/api@1.9.0))(next@16.0.3(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(typescript@5.9.3)(zod@4.1.13):
+  inngest@3.46.0(@opentelemetry/core@2.2.0(@opentelemetry/api@1.9.0))(next@16.0.3(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(typescript@5.9.3)(zod@4.2.1):
     dependencies:
       '@bufbuild/protobuf': 2.10.1
       '@inngest/ai': 0.1.7
@@ -6722,7 +6714,7 @@ snapshots:
       strip-ansi: 5.2.0
       temporal-polyfill: 0.2.5
       ulid: 2.4.0
-      zod: 4.1.13
+      zod: 4.2.1
     optionalDependencies:
       next: 16.0.3(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       typescript: 5.9.3
@@ -6986,10 +6978,6 @@ snapshots:
   lru-cache@5.1.1:
     dependencies:
       yallist: 3.1.1
-
-  lucide-react@0.554.0(react@19.2.0):
-    dependencies:
-      react: 19.2.0
 
   magic-string@0.30.21:
     dependencies:
@@ -7835,8 +7823,8 @@ snapshots:
 
   yocto-queue@0.1.0: {}
 
-  zod-validation-error@4.0.2(zod@4.1.13):
+  zod-validation-error@4.0.2(zod@4.2.1):
     dependencies:
-      zod: 4.1.13
+      zod: 4.2.1
 
-  zod@4.1.13: {}
+  zod@4.2.1: {}
