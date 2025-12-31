@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation'
 import { z } from 'zod'
 
 const registrationSchema = z.object({
-    full_name: z.string().min(3, 'Nome completo é obrigatório'),
+    full_name: z.string().optional().default(''),
     name: z.string().min(2, 'Nome da agência é obrigatório'),
     cnpj: z.string().min(14, 'CNPJ inválido').regex(/^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/, 'Formato inválido (00.000.000/0000-00)'),
     whatsapp: z.string().min(14, 'WhatsApp inválido').regex(/^\(\d{2}\) \d{5}-\d{4}$/, 'Formato inválido (00) 00000-0000'),
@@ -48,5 +48,5 @@ export async function completeRegistration(prevState: any, formData: FormData) {
         return { message: 'Erro ao salvar dados. Tente novamente.' }
     }
 
-    redirect('/dashboard')
+    redirect('/onboarding/done')
 }

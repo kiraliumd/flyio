@@ -2,10 +2,10 @@
 
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
-import { Button } from '@/components/ui/button'
-import { AuthLayout } from '@/components/auth/auth-layout'
 import { toast } from 'sonner'
 import { Suspense } from 'react'
+import Image from 'next/image'
+import Link from 'next/link'
 
 function LoginContent() {
     const [loading, setLoading] = useState(false)
@@ -28,54 +28,104 @@ function LoginContent() {
     }
 
     return (
-        <AuthLayout
-            title="Acesse sua conta ou cadastre sua agência."
-            subtitle="O Trigovo automatiza de forma inteligente as consultas de reservas das principais companhias aéreas."
-            bullets={[
-                "Execução determinística e controlada",
-                "Projetado para SPAs instáveis de companhias aéreas",
-                "Automação segura baseada em filas e workers"
-            ]}
-            footerText="Utilizado por times de travel tech e operações internas."
-        >
-            <div className="flex flex-col gap-6">
-                <div className="flex flex-col gap-2">
-                    <h2 className="text-2xl font-bold tracking-tight">
-                        Bem-vindo ao Trigovo
-                    </h2>
-                    <p className="text-sm text-muted-foreground">
-                        Utilize sua conta Google para acessar o sistema de forma segura.
-                    </p>
-                </div>
+        <div className="min-h-screen bg-white flex items-center justify-center px-4 py-6 sm:px-6 md:py-8">
+            <div className="w-full max-w-[766px]">
+                <div className="bg-white border border-[#e6e9f2] rounded-xl overflow-hidden flex flex-col md:flex-row md:h-[581px]">
+                    {/* Lado Esquerdo - Ilustração */}
+                    <div className="bg-gradient-to-b from-[#fffdf3] via-[#fff4cc] via-[50.481%] to-[#fddb32] w-full md:w-[383px] flex flex-col justify-between p-6 sm:p-8 relative min-h-[280px] md:min-h-0">
+                        {/* Logo Trigovo */}
+                        <div className="h-[24.5px] w-[99.011px] shrink-0">
+                            <Image
+                                src="/logo-trigovo.svg"
+                                alt="Trigovo"
+                                width={100}
+                                height={25}
+                                className="h-[24.5px] w-auto object-contain"
+                                unoptimized
+                            />
+                        </div>
 
-                <div className="grid gap-4">
-                    <Button
-                        variant="outline"
-                        type="button"
-                        disabled={loading}
-                        onClick={handleGoogleLogin}
-                        className="w-full flex items-center justify-center gap-2"
-                    >
-                        {loading ? (
-                            'Carregando...'
-                        ) : (
-                            <>
-                                <svg className="h-4 w-4" aria-hidden="true" focusable="false" data-prefix="fab" data-icon="google" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 488 512">
-                                    <path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z"></path>
-                                </svg>
-                                Entrar com Google
-                            </>
-                        )}
-                    </Button>
-                </div>
+                        {/* Ilustração Trigovo Plus - Centralizada */}
+                        <div className="flex-1 flex items-center justify-center my-4 sm:my-6">
+                            <div className="h-[120px] sm:h-[172px] w-full flex items-center justify-center">
+                                <Image
+                                    src="/trigovo-plus-onboarding.svg"
+                                    alt="Trigovo Plus"
+                                    width={319}
+                                    height={172}
+                                    className="h-full w-auto max-w-full object-contain"
+                                    unoptimized
+                                />
+                            </div>
+                        </div>
 
-                <div className="flex flex-col gap-4 text-center">
-                    <p className="text-xs text-muted-foreground">
-                        Ao entrar, você concorda com nossos termos de serviço e política de privacidade.
-                    </p>
+                        {/* Caixa de Texto Amarela */}
+                        <div className="bg-[#fff7c9] rounded-2xl p-4 w-full shrink-0">
+                            <div className="flex flex-col gap-3 sm:gap-4">
+                                <h3 className="text-lg sm:text-xl font-semibold leading-normal text-[#191e3b]">
+                                    <span className="block">Escale a operação aérea</span>
+                                    <span className="block">da sua agência.</span>
+                                </h3>
+                                <p className="text-xs sm:text-sm font-normal leading-[19px] text-[#191e3b]">
+                                    <span className="block">Automatize o monitoramento de bilhetes</span>
+                                    <span className="block">e a emissão de cartões de embarque.</span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Lado Direito - Formulário de Login */}
+                    <div className="flex-1 flex flex-col items-center justify-center p-6 sm:p-8 w-full md:w-[383px]">
+                        <div className="flex flex-col gap-5 sm:gap-6 w-full max-w-sm">
+                            <div className="flex flex-col gap-4 sm:gap-6">
+                                <h2 className="text-xl sm:text-2xl font-semibold leading-7 sm:leading-8 text-[#191e3b] text-center">
+                                    Boas vindas a Trigovo
+                                </h2>
+                                <p className="text-sm font-normal leading-5 text-[#7a7fa3] text-center">
+                                    Entre em segundos com sua conta Google sem cartão de crédito. Sem burocracia.
+                                </p>
+                            </div>
+
+                            <button
+                                type="button"
+                                disabled={loading}
+                                onClick={handleGoogleLogin}
+                                className="w-full min-h-[44px] px-4 py-3 bg-white border border-[#e6e9f2] rounded-md flex items-center justify-center gap-2 hover:bg-white hover:border-[#e6e9f2] disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] transition-transform"
+                            >
+                                {loading ? (
+                                    <span className="text-sm font-medium leading-5 text-[#191e3b]">Carregando...</span>
+                                ) : (
+                                    <>
+                                        <Image
+                                            src="/icon-google.svg"
+                                            alt="Google"
+                                            width={16}
+                                            height={16}
+                                            className="size-4 shrink-0"
+                                            unoptimized
+                                        />
+                                        <span className="text-sm font-medium leading-5 text-[#191e3b]">
+                                            Entrar com o Google
+                                        </span>
+                                    </>
+                                )}
+                            </button>
+
+                            <p className="text-xs font-normal leading-5 text-[#7a7fa3] text-center px-2">
+                                <span>Ao fazer login, você concorda com os nossos </span>
+                                <Link href="#" className="underline text-[#7a7fa3] hover:no-underline active:opacity-70">
+                                    Termos
+                                </Link>
+                                <span> e </span>
+                                <Link href="#" className="underline text-[#7a7fa3] hover:no-underline active:opacity-70">
+                                    Privacidade.
+                                </Link>
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </AuthLayout>
+        </div>
     )
 }
 

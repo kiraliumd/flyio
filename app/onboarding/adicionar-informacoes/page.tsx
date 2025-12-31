@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { OnboardingFormNew } from './onboarding-form-new'
 
-export default async function OnboardingPage() {
+export default async function AdicionarInformacoesPage() {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
@@ -23,3 +23,4 @@ export default async function OnboardingPage() {
 
     return <OnboardingFormNew />
 }
+

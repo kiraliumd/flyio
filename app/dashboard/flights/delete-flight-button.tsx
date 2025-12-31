@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { Delete02Icon } from '@hugeicons/core-free-icons'
+import { Delete04Icon } from '@hugeicons/core-free-icons'
 import { deleteFlight } from '@/app/actions/delete-flight'
 import { toast } from 'sonner'
 import {
@@ -23,7 +23,12 @@ interface DeleteFlightButtonProps {
 }
 
 export function DeleteFlightButton({ ticketId }: DeleteFlightButtonProps) {
+    const [mounted, setMounted] = useState(false)
     const [loading, setLoading] = useState(false)
+
+    useEffect(() => {
+        setMounted(true)
+    }, [])
 
     const handleDelete = async () => {
         setLoading(true)
@@ -41,11 +46,19 @@ export function DeleteFlightButton({ ticketId }: DeleteFlightButtonProps) {
         }
     }
 
+    if (!mounted) {
+        return (
+            <Button size="icon" variant="ghost" className="h-4 w-4 p-0 hover:bg-transparent" disabled>
+                <HugeiconsIcon icon={Delete04Icon} className="size-4 text-[#ef4444]" />
+            </Button>
+        )
+    }
+
     return (
         <AlertDialog>
             <AlertDialogTrigger asChild>
-                <Button size="icon" variant="ghost" className="text-destructive hover:text-destructive" disabled={loading}>
-                    <HugeiconsIcon icon={Delete02Icon} className="size-4" />
+                <Button size="icon" variant="ghost" className="h-4 w-4 p-0 hover:bg-transparent" disabled={loading}>
+                    <HugeiconsIcon icon={Delete04Icon} className="size-4 text-[#ef4444]" />
                 </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>

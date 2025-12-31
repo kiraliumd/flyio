@@ -40,7 +40,7 @@ export function DashboardSidebar() {
             <div className="flex h-14 items-center border-b border-sidebar-border px-6">
                 <Link href="/dashboard" className="flex items-center gap-2 font-semibold text-sidebar-foreground">
                     <HugeiconsIcon icon={Airplane01Icon} className="size-6" />
-                    <span>Flyio</span>
+                    <span>Trigovo</span>
                 </Link>
             </div>
             <div className="flex-1 overflow-auto py-4">

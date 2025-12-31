@@ -1,8 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { OnboardingFormNew } from './onboarding-form-new'
+import { DoneContent } from './done-content'
 
-export default async function OnboardingPage() {
+export default async function DonePage() {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
@@ -10,16 +10,17 @@ export default async function OnboardingPage() {
         redirect('/login')
     }
 
-    // Check if agency has already completed onboarding
+    // Check if agency has completed onboarding
     const { data: agency } = await supabase
         .from('agencies')
         .select('name, cnpj')
         .eq('id', user.id)
         .single()
 
-    if (agency?.name && agency?.cnpj) {
-        redirect('/dashboard')
+    if (!agency?.name || !agency?.cnpj) {
+        redirect('/onboarding/adicionar-informacoes')
     }
 
-    return <OnboardingFormNew />
+    return <DoneContent />
 }
+

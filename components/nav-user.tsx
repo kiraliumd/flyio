@@ -1,8 +1,9 @@
 "use client"
 
+import { useState, useEffect } from 'react'
 import { HugeiconsIcon } from '@hugeicons/react'
 import {
-    Sorting05Icon,
+    UnfoldMoreIcon,
     Logout01Icon,
     SparklesIcon,
 } from "@hugeicons/core-free-icons"
@@ -39,8 +40,37 @@ export function NavUser({
         avatar?: string
     }
 }) {
+    const [mounted, setMounted] = useState(false)
     const { isMobile } = useSidebar()
     const { signOut } = useAuth()
+
+    useEffect(() => {
+        setMounted(true)
+    }, [])
+
+    if (!mounted) {
+        return (
+            <SidebarMenu>
+                <SidebarMenuItem>
+                    <SidebarMenuButton
+                        size="lg"
+                        className="gap-2 p-2 hover:bg-transparent data-[state=open]:bg-transparent"
+                    >
+                        <UserAvatar name={user.name} className="h-8 w-8 rounded-lg shrink-0" />
+                        <div className="flex flex-col flex-1 text-left leading-tight min-w-0">
+                            <span className="text-sm font-semibold leading-5 text-[#191e3b] truncate">
+                                {user.name}
+                            </span>
+                            <span className="text-xs font-normal leading-4 text-[#191e3b] truncate">
+                                {user.email}
+                            </span>
+                        </div>
+                        <HugeiconsIcon icon={UnfoldMoreIcon} className="ml-auto size-4 shrink-0 text-[#191e3b]" />
+                    </SidebarMenuButton>
+                </SidebarMenuItem>
+            </SidebarMenu>
+        )
+    }
 
     return (
         <SidebarMenu>
@@ -49,14 +79,18 @@ export function NavUser({
                     <DropdownMenuTrigger asChild>
                         <SidebarMenuButton
                             size="lg"
-                            className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                            className="gap-2 p-2 hover:bg-transparent data-[state=open]:bg-transparent"
                         >
-                            <UserAvatar name={user.name} className="h-8 w-8 rounded-lg" />
-                            <div className="grid flex-1 text-left text-sm leading-tight">
-                                <span className="truncate font-semibold">{user.name}</span>
-                                <span className="truncate text-xs">{user.email}</span>
+                            <UserAvatar name={user.name} className="h-8 w-8 rounded-lg shrink-0" />
+                            <div className="flex flex-col flex-1 text-left leading-tight min-w-0">
+                                <span className="text-sm font-semibold leading-5 text-[#191e3b] truncate">
+                                    {user.name}
+                                </span>
+                                <span className="text-xs font-normal leading-4 text-[#191e3b] truncate">
+                                    {user.email}
+                                </span>
                             </div>
-                            <HugeiconsIcon icon={Sorting05Icon} className="ml-auto size-4" />
+                            <HugeiconsIcon icon={UnfoldMoreIcon} className="ml-auto size-4 shrink-0 text-[#191e3b]" />
                         </SidebarMenuButton>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent

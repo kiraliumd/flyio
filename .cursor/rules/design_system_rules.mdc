@@ -1,0 +1,341 @@
+# Design System Rules - Trigovo
+
+Este documento define as regras e padrões do design system do projeto Trigovo, integrando especificações do Figma com a implementação atual.
+
+## 1. Token Definitions
+
+### Cores (Design Tokens)
+
+As cores são definidas usando variáveis CSS no formato OKLCH em `app/globals.css`:
+
+**Cores Principais:**
+- `--background`: Fundo principal (oklch(0.97 0.007 234))
+- `--foreground`: Texto principal (oklch(0.21 0.036 256))
+- `--primary`: Cor primária (oklch(0.27 0.035 249))
+- `--primary-foreground`: Texto sobre primária (oklch(1 0 0))
+- `--secondary`: Cor secundária (oklch(0.55 0.040 247 / 0.075))
+- `--muted`: Cor muted (oklch(0.92 0.014 248))
+- `--accent`: Cor de destaque (oklch(0.98 0.003 248))
+- `--destructive`: Cor de erro/destrutiva (oklch(0.808 0.114 19.571))
+- `--border`: Cor de borda (oklch(0.27 0.035 249 / 0.125))
+- `--ring`: Cor de foco (oklch(0.27 0.035 249))
+
+**Cores do Sidebar:**
+- `--sidebar`: Fundo do sidebar (oklch(0.21 0.036 256))
+- `--sidebar-foreground`: Texto do sidebar (oklch(1 0 0))
+- `--sidebar-primary`: Primária do sidebar (oklch(1 0 0 / 0.85))
+- `--sidebar-accent`: Destaque do sidebar (oklch(1 0 0 / 0.1))
+- `--sidebar-border`: Borda do sidebar (oklch(1 0 0 / 0.125))
+
+**Uso:**
+```tsx
+// Use classes Tailwind que referenciam as variáveis CSS
+<div className="bg-primary text-primary-foreground">
+<div className="border border-border">
+```
+
+### Tipografia
+
+**Font Family (do Figma):**
+- Família principal: `Inter` (definida como `var(--font-inter)`)
+- Fallback: `ui-sans-serif, system-ui`
+
+**Tamanhos de Texto (do Figma):**
+- `text-xs`: 12px (size/xs do Figma)
+- `text-sm`: 14px
+- `text-base`: 16px
+- `text-lg`: 18px
+- `text-xl`: 20px
+- `text-2xl`: 24px
+- `text-3xl`: 30px
+
+**Line Height (do Figma):**
+- `leading/4`: 16px (para text-xs)
+- Use classes Tailwind: `leading-tight`, `leading-normal`, `leading-relaxed`
+
+**Font Weight (do Figma):**
+- `weight/normal`: 400 (font-normal)
+- `font-medium`: 500
+- `font-semibold`: 600
+- `font-bold`: 700
+
+**Letter Spacing (do Figma):**
+- `tracking/normal`: 0px (tracking-normal)
+- `tracking-tight`: -0.025em
+- `tracking-wide`: 0.025em
+
+**Exemplo de uso:**
+```tsx
+// Texto xs/Regular conforme Figma
+<p className="text-xs font-normal leading-4 tracking-normal">
+  Suporte
+</p>
+```
+
+### Espaçamento
+
+Use o sistema de espaçamento do Tailwind (baseado em 4px):
+- `gap-2`: 8px
+- `gap-4`: 16px
+- `gap-6`: 24px
+- `p-4`: 16px
+- `p-6`: 24px
+- `space-y-4`: 16px vertical
+- `space-y-6`: 24px vertical
+
+### Border Radius
+
+- `--radius`: 0.5rem (8px) - padrão
+- `rounded-md`: 6px
+- `rounded-lg`: 8px
+- `rounded-xl`: 12px (usado em Cards)
+
+## 2. Component Library
+
+### Arquitetura de Componentes
+
+O projeto usa **shadcn/ui** com estilo "new-york" e componentes localizados em:
+- `components/ui/` - Componentes base do shadcn/ui
+- `components/` - Componentes específicos do projeto
+
+### Padrões de Componentes
+
+**Button:**
+```tsx
+import { Button } from '@/components/ui/button'
+
+// Variantes disponíveis:
+<Button variant="default">Padrão</Button>
+<Button variant="outline">Outline</Button>
+<Button variant="secondary">Secundário</Button>
+<Button variant="ghost">Ghost</Button>
+<Button variant="destructive">Destrutivo</Button>
+<Button variant="link">Link</Button>
+
+// Tamanhos:
+<Button size="sm">Pequeno</Button>
+<Button size="default">Padrão</Button>
+<Button size="lg">Grande</Button>
+```
+
+**Card:**
+```tsx
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+
+<Card>
+  <CardHeader>
+    <CardTitle>Título</CardTitle>
+  </CardHeader>
+  <CardContent>
+    Conteúdo
+  </CardContent>
+</Card>
+```
+
+**Badge:**
+```tsx
+import { Badge } from '@/components/ui/badge'
+
+<Badge variant="default">Padrão</Badge>
+<Badge variant="destructive">Erro</Badge>
+<Badge variant="secondary">Secundário</Badge>
+```
+
+### Componentes Customizados
+
+**AuthLayout:**
+- Localização: `components/auth/auth-layout.tsx`
+- Usado em: Login, Onboarding
+- Props: `title`, `subtitle`, `bullets[]`, `footerText`
+
+**AppSidebar:**
+- Localização: `components/app-sidebar.tsx`
+- Usado em: Dashboard
+- Props: `user: { name, email }`
+
+## 3. Frameworks & Libraries
+
+**Stack Tecnológico:**
+- Framework: Next.js 14+ (App Router)
+- React: 18+
+- TypeScript
+- Styling: Tailwind CSS v4
+- Componentes: shadcn/ui (Radix UI)
+- Ícones: Hugeicons (hugeicons/react)
+- Animações: tailwindcss-animate
+
+**Build System:**
+- Bundler: Next.js (Turbopack)
+- CSS: Tailwind CSS com PostCSS
+
+## 4. Asset Management
+
+**Imagens:**
+- Localização: `public/` para assets estáticos
+- Otimização: Next.js Image component para otimização automática
+- Formato: SVG para ícones, PNG/JPG para imagens
+
+**Ícones:**
+- Biblioteca: Hugeicons (`@hugeicons/react`)
+- Uso:
+```tsx
+import { HugeiconsIcon } from '@hugeicons/react'
+import { Airplane01Icon } from '@hugeicons/core-free-icons'
+
+<HugeiconsIcon icon={Airplane01Icon} className="size-4" />
+```
+
+## 5. Icon System
+
+**Biblioteca:** Hugeicons
+**Convenção de Nomeação:** PascalCase com sufixo "Icon"
+**Tamanhos Padrão:**
+- `size-4`: 16px (ícones pequenos)
+- `size-6`: 24px (ícones médios)
+- `size-8`: 32px (ícones grandes)
+
+**Exemplo:**
+```tsx
+import { HugeiconsIcon } from '@hugeicons/react'
+import { Airplane01Icon, CheckmarkCircle01Icon } from '@hugeicons/core-free-icons'
+
+<HugeiconsIcon icon={Airplane01Icon} className="size-4 text-blue-600" />
+```
+
+## 6. Styling Approach
+
+**Metodologia:**
+- Utility-first com Tailwind CSS
+- CSS Variables para tokens de design
+- Componentes com `cn()` utility para merge de classes
+
+**Global Styles:**
+- Arquivo: `app/globals.css`
+- Define variáveis CSS e estilos base
+- Suporte a dark mode via classe `.dark`
+
+**Responsive Design:**
+- Breakpoints Tailwind padrão:
+  - `sm`: 640px
+  - `md`: 768px
+  - `lg`: 1024px
+  - `xl`: 1280px
+  - `2xl`: 1536px
+
+**Exemplo:**
+```tsx
+<div className="grid gap-4 md:grid-cols-3">
+  {/* 1 coluna no mobile, 3 colunas no desktop */}
+</div>
+```
+
+## 7. Project Structure
+
+```
+app/
+  ├── dashboard/        # Páginas do dashboard
+  ├── login/            # Página de login
+  ├── onboarding/       # Página de onboarding
+  └── globals.css       # Estilos globais e tokens
+
+components/
+  ├── ui/               # Componentes base (shadcn/ui)
+  ├── auth/             # Componentes de autenticação
+  ├── dashboard/        # Componentes do dashboard
+  └── boarding-pass/    # Componentes de boarding pass
+
+lib/
+  └── utils.ts          # Utilitários (cn function)
+```
+
+## 8. Integração com Figma
+
+### Processo de Atualização do Design System
+
+1. **Obter Contexto do Figma:**
+   - Use o MCP do Figma para obter `design_context` da tela selecionada
+   - Obtenha `variable_defs` para tokens de design
+   - Capture `screenshot` para referência visual
+
+2. **Mapear Tokens do Figma:**
+   - `family/sans` → `Inter` (já configurado)
+   - `size/xs` → `12px` (text-xs)
+   - `leading/4` → `16px` (leading-4)
+   - `weight/normal` → `400` (font-normal)
+   - `tracking/normal` → `0px` (tracking-normal)
+
+3. **Atualizar Variáveis CSS:**
+   - Se novas cores forem definidas no Figma, adicione em `app/globals.css`
+   - Mantenha formato OKLCH para consistência
+   - Atualize variáveis de dark mode também
+
+4. **Atualizar Componentes:**
+   - Use classes Tailwind que referenciam variáveis CSS
+   - Mantenha padrões do shadcn/ui
+   - Adicione variantes quando necessário
+
+### Exemplo de Conversão Figma → Código
+
+**Figma:**
+- Text: "Suporte"
+- Style: Text-xs/Regular
+- Font: Inter, 12px, weight 400, line-height 16px
+
+**Código:**
+```tsx
+<p className="text-xs font-normal leading-4 tracking-normal text-foreground">
+  Suporte
+</p>
+```
+
+## 9. Convenções de Código
+
+**Naming:**
+- Componentes: PascalCase (`AddFlightDialog`)
+- Arquivos: kebab-case (`add-flight-dialog.tsx`)
+- Variáveis: camelCase (`activeFlights`)
+- Constantes: UPPER_SNAKE_CASE (`MAX_RETRIES`)
+
+**Imports:**
+```tsx
+// 1. React/Next.js
+import { useState } from 'react'
+import Link from 'next/link'
+
+// 2. Bibliotecas externas
+import { format } from 'date-fns'
+
+// 3. Componentes UI
+import { Button } from '@/components/ui/button'
+
+// 4. Componentes do projeto
+import { AuthLayout } from '@/components/auth/auth-layout'
+
+// 5. Utilitários
+import { cn } from '@/lib/utils'
+
+// 6. Tipos
+import type { Airline } from '@/lib/business-rules'
+```
+
+**Componentes:**
+- Use Server Components por padrão
+- Use 'use client' apenas quando necessário (hooks, interatividade)
+- Export default para páginas
+- Named exports para componentes
+
+## 10. Acessibilidade
+
+- Use elementos semânticos HTML
+- Adicione `aria-label` quando necessário
+- Mantenha contraste adequado (WCAG AA)
+- Suporte a navegação por teclado
+- Use `focus-visible` para estados de foco
+
+## 11. Performance
+
+- Use Server Components quando possível
+- Lazy load de componentes pesados
+- Otimize imagens com Next.js Image
+- Use `Suspense` para loading states
+- Minimize JavaScript no client

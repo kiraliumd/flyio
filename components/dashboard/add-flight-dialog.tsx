@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -21,7 +21,12 @@ import {
 } from '@/components/ui/dialog'
 
 export function AddFlightDialog() {
+    const [mounted, setMounted] = useState(false)
     const [open, setOpen] = useState(false)
+
+    useEffect(() => {
+        setMounted(true)
+    }, [])
     const [step, setStep] = useState<'select-airline' | 'details'>('select-airline')
     const [pnr, setPnr] = useState('')
     const [lastName, setLastName] = useState('')
@@ -76,6 +81,15 @@ export function AddFlightDialog() {
         }
     }
 
+    if (!mounted) {
+        return (
+            <Button className="bg-[#fddb32] hover:bg-[#fddb32]/90 text-[#191e3b] h-8 gap-1.5 px-3 rounded-lg" disabled>
+                <HugeiconsIcon icon={PlusSignIcon} className="size-4" />
+                <span className="text-sm font-medium leading-5">Adicionar Voo</span>
+            </Button>
+        )
+    }
+
     return (
         <Dialog open={open} onOpenChange={(val) => {
             setOpen(val)
@@ -91,9 +105,9 @@ export function AddFlightDialog() {
             }
         }}>
             <DialogTrigger asChild>
-                <Button>
-                    <HugeiconsIcon icon={PlusSignIcon} className="mr-2 size-4" />
-                    Adicionar Voo
+                <Button className="bg-[#fddb32] hover:bg-[#fddb32]/90 text-[#191e3b] h-8 gap-1.5 px-3 rounded-lg">
+                    <HugeiconsIcon icon={PlusSignIcon} className="size-4" />
+                    <span className="text-sm font-medium leading-5">Adicionar Voo</span>
                 </Button>
             </DialogTrigger>
             <DialogOverlay className="bg-black/25 backdrop-blur-sm" />

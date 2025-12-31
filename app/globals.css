@@ -46,6 +46,8 @@
 
 :root {
   /* USE EXATAMENTE O CÓDIGO FORNECIDO PELO USUÁRIO ABAIXO */
+  
+  /* Design Tokens - Cores Principais */
   --background: oklch(0.97 0.007 234);
   --foreground: oklch(0.21 0.036 256);
   --card: oklch(1 0.000 0);
@@ -65,11 +67,15 @@
   --border: oklch(0.27 0.035 249 / 0.125);
   --input: oklch(0.27 0.035 249 / 0.125);
   --ring: oklch(0.27 0.035 249);
+  
+  /* Design Tokens - Cores de Gráficos */
   --chart-1: oklch(0.69 0.161 40);
   --chart-2: oklch(0.71 0.035 248);
   --chart-3: oklch(0.627 0.265 303.9);
   --chart-4: oklch(0.852 0.199 91.936);
   --chart-5: oklch(0.685 0.169 237.323);
+  
+  /* Design Tokens - Sidebar */
   --sidebar: oklch(0.21 0.036 256);
   --sidebar-foreground: oklch(1 0 0);
   --sidebar-primary: oklch(1 0 0 / 0.85);
@@ -78,9 +84,43 @@
   --sidebar-accent-foreground: oklch(1 0 0);
   --sidebar-border: oklch(1 0 0 / 0.125);
   --sidebar-ring: oklch(0.44 0.037 250);
-  --radius: 0.5rem;
+  
+  /* Design Tokens - Espaçamento e Layout */
+  --radius: 0.5rem; /* 8px - Border radius padrão */
   --sidebar-width: 255px;
   --sidebar-width-mobile: 20rem;
+  
+  /* Design Tokens - Cores Customizadas do Figma */
+  /* Cores de Texto */
+  --text-primary: #191e3b;
+  --text-secondary: #4b5173;
+  --text-tertiary: #7a7fa3;
+  --text-dark: #0a0a0a;
+  
+  /* Cores de Brand */
+  --brand-yellow: #fddb32;
+  --brand-yellow-light: #fff7d6;
+  --brand-yellow-lighter: #fff9e3;
+  --brand-blue: #546dfa;
+  
+  /* Cores de Status */
+  --status-error-bg: #fdecec;
+  --status-error-text: #9b2c2c;
+  --status-warning-bg: #fff2d6;
+  --status-warning-text: #8a6a1f;
+  --status-success-bg: #eaf7f0;
+  --status-success-text: #2e7d5b;
+  
+  /* Cores de Borda e Fundo */
+  --border-default: #e6e9f2;
+  --bg-secondary: #f1f3f9;
+  
+  /* Design Tokens - Tipografia (do Figma) */
+  /* Font Family: Inter (definida em layout.tsx) */
+  /* Text-xs: 12px (size/xs do Figma) */
+  /* Line Height: 16px (leading/4 do Figma) */
+  /* Font Weight Normal: 400 (weight/normal do Figma) */
+  /* Letter Spacing: 0px (tracking/normal do Figma) */
 }
 
 .dark {

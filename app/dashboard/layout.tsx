@@ -47,8 +47,8 @@ export default async function DashboardLayout({
         >
             <AppSidebar user={userData} />
 
-            <SidebarInset className="overflow-hidden bg-gray-50/50">
-                <header className="flex h-16 shrink-0 items-center gap-2 px-4 sticky top-0 z-10 bg-gray-50/50 backdrop-blur-sm">
+            <SidebarInset className="overflow-hidden bg-white">
+                <header className="flex h-16 shrink-0 items-center gap-2 px-4 sticky top-0 z-10 bg-white backdrop-blur-sm border-b border-[#e6e9f2]">
                     <div className="w-full max-w-[1600px] mx-auto flex items-center gap-2">
                         <SidebarTrigger className="-ml-1" />
                         <Separator orientation="vertical" className="mr-2 h-4" />
@@ -56,7 +56,7 @@ export default async function DashboardLayout({
                     </div>
                 </header>
 
-                <main className="flex-1 overflow-y-auto p-6 pt-0">
+                <main className="flex-1 overflow-y-auto p-4">
                     <div className="mx-auto w-full max-w-[1600px]">
                         {children}
                     </div>

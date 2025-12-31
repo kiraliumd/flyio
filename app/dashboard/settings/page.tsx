@@ -14,13 +14,10 @@ export default async function SettingsPage() {
         .single()
 
     return (
-        <div className="space-y-6">
-            <div>
-                <h3 className="text-lg font-medium">Configurações</h3>
-                <p className="text-sm text-muted-foreground">
-                    Gerencie as preferências da sua agência e marca.
-                </p>
-            </div>
+        <div className="space-y-4">
+            <h1 className="text-[30px] font-semibold leading-[40px] tracking-normal text-[#191e3b]">
+                Configurações
+            </h1>
 
             <SettingsForm
                 initialData={agency || {}}

@@ -39,7 +39,7 @@ O projeto é dividido em dois serviços principais que se comunicam via Redis:
 
 ### 1. Configuração do Core (Next.js)
 
-Na raiz do projeto (`/flyio`):
+Na raiz do projeto (`/trigovo`):
 
 ```bash
 # Instalar dependências

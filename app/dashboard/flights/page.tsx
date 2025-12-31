@@ -15,9 +15,11 @@ export default async function FlightsPage() {
         .order('flight_date', { ascending: true })
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4">
             <div className="flex items-center justify-between">
-                <h2 className="text-3xl font-bold tracking-tight">Voos</h2>
+                <h1 className="text-[30px] font-semibold leading-[40px] tracking-normal text-[#191e3b]">
+                    Gestão de bilhetes
+                </h1>
                 <AddFlightDialog />
             </div>
 

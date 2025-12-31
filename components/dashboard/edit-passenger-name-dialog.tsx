@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label'
 import { toast } from 'sonner'
 import { updatePassengerName } from '@/app/actions/update-passenger-name'
 import { HugeiconsIcon } from '@hugeicons/react'
-import { PencilIcon } from '@hugeicons/core-free-icons'
+import { PayByCheckIcon } from '@hugeicons/core-free-icons'
 import {
     Dialog,
     DialogContent,
@@ -25,10 +25,15 @@ interface EditPassengerNameDialogProps {
 }
 
 export function EditPassengerNameDialog({ ticketId, currentName }: EditPassengerNameDialogProps) {
+    const [mounted, setMounted] = useState(false)
     const [open, setOpen] = useState(false)
     const [name, setName] = useState(currentName)
     const [loading, setLoading] = useState(false)
     const router = useRouter()
+
+    useEffect(() => {
+        setMounted(true)
+    }, [])
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -59,11 +64,20 @@ export function EditPassengerNameDialog({ ticketId, currentName }: EditPassenger
         }
     }
 
+    if (!mounted) {
+        return (
+            <Button size="icon" variant="ghost" className="h-4 w-4 p-0 hover:bg-transparent" disabled>
+                <HugeiconsIcon icon={PayByCheckIcon} className="size-4 text-[#191E3B]" />
+                <span className="sr-only">Editar nome</span>
+            </Button>
+        )
+    }
+
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-primary">
-                    <HugeiconsIcon icon={PencilIcon} className="size-4" />
+                <Button size="icon" variant="ghost" className="h-4 w-4 p-0 hover:bg-transparent">
+                    <HugeiconsIcon icon={PayByCheckIcon} className="size-4 text-[#191E3B]" />
                     <span className="sr-only">Editar nome</span>
                 </Button>
             </DialogTrigger>
