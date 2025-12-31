@@ -8,18 +8,24 @@ import { z } from 'zod'
 
 // Schema de validação para inputs do usuário
 const bookingSchema = z.object({
-    pnr: z.string().min(5).max(20).regex(/^[a-zA-Z0-9]+$/),
-    lastname: z.string().min(2).max(50),
+    pnr: z.string().min(5, "Localizador muito curto").max(20).regex(/^[a-zA-Z0-9]+$/, "Localizador deve ser alfanumérico"),
+    lastname: z.string().min(2, "Sobrenome muito curto").max(50),
     airline: z.enum(['LATAM', 'GOL', 'AZUL']),
-    origin: z.string().length(3).optional()
+    origin: z.string().transform(v => v === "" ? undefined : v).pipe(z.string().length(3, "Origem deve ter 3 letras").optional())
 })
 
 /**
  * 1. Inicia o Job no Scraper e retorna o JobID
  */
 export async function startScraperJob(pnr: string, lastname: string, airline: Airline, origin?: string) {
+    console.log(`🚀 startScraperJob: ${airline} ${pnr} (Origin: ${origin})`);
+
     const validated = bookingSchema.safeParse({ pnr, lastname, airline, origin })
-    if (!validated.success) throw new Error('Dados inválidos.')
+    if (!validated.success) {
+        const errorMsg = validated.error.errors.map(e => `${e.path}: ${e.message}`).join(', ');
+        console.error('❌ Validação falhou:', errorMsg);
+        throw new Error(`Dados inválidos: ${errorMsg}`);
+    }
 
     const cookieStore = await cookies()
     const supabase = createServerClient(
