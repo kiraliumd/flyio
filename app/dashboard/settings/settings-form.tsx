@@ -61,50 +61,50 @@ export function SettingsForm({ initialData, userEmail }: SettingsFormProps) {
     // Atualiza logoUrl quando initialData mudar
     useEffect(() => {
         setLogoUrl(initialData.logo_url || null)
-        
+
         // Se não houver logo, limpa o nome do arquivo
         if (!initialData.logo_url) {
             setLogoFileName(null)
             localStorage.removeItem('agency_logo_filename')
             return
         }
-        
+
         // Primeiro tenta pegar do localStorage (nome salvo após upload)
         const savedFileName = localStorage.getItem('agency_logo_filename')
         if (savedFileName) {
             setLogoFileName(savedFileName)
             return
         }
-        
+
         // Se não tiver no localStorage, tenta extrair da URL
         const urlParts = initialData.logo_url.split('/')
         const fileNameWithParams = urlParts[urlParts.length - 1]
         // Remove query parameters
         const fileName = fileNameWithParams.split('?')[0]
-        
+
         // Formato do Vercel Blob: {uuid}-{nome-original}-{sufixo-aleatorio}.{ext}
         // Exemplo: 6fccde5e-66f9-4fed-adbd-ced228a35865-aviar-logo-WlZ0ODyeLIrvIca1LCzgWDSLPNbKqm.jpg
         // Queremos extrair: aviar-logo.jpg
-        
+
         // Regex para capturar o nome original entre o UUID e o sufixo aleatório
         // UUID tem formato: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx (36 caracteres com hífens)
         const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}-/i
-        
+
         if (uuidPattern.test(fileName)) {
             // Remove o UUID do início (formato: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx-)
             const withoutUuid = fileName.replace(uuidPattern, '')
             // Agora temos: aviar-logo-WlZ0ODyeLIrvIca1LCzgWDSLPNbKqm.jpg
-            
+
             // Extrai a extensão
             const extensionMatch = withoutUuid.match(/\.([^.]+)$/)
             const extension = extensionMatch ? extensionMatch[0] : '.jpg'
-            
+
             // Remove a extensão temporariamente
             const withoutExt = withoutUuid.replace(/\.[^.]+$/, '')
-            
+
             // Divide por hífen e identifica o sufixo aleatório (geralmente a última parte longa)
             const parts = withoutExt.split('-')
-            
+
             // O sufixo aleatório do Vercel geralmente é a última parte e tem mais de 20 caracteres
             // Vamos pegar todas as partes exceto a última se ela for muito longa
             let originalNameParts: string[] = []
@@ -115,7 +115,7 @@ export function SettingsForm({ initialData, userEmail }: SettingsFormProps) {
                 }
                 originalNameParts.push(parts[i])
             }
-            
+
             // Se não encontrou padrão, tenta remover apenas a última parte se for muito longa
             if (originalNameParts.length === parts.length && parts.length > 1) {
                 const lastPart = parts[parts.length - 1]
@@ -123,11 +123,11 @@ export function SettingsForm({ initialData, userEmail }: SettingsFormProps) {
                     originalNameParts = parts.slice(0, -1)
                 }
             }
-            
-            const extractedName = originalNameParts.length > 0 
+
+            const extractedName = originalNameParts.length > 0
                 ? `${originalNameParts.join('-')}${extension}`
                 : `${withoutExt}${extension}`
-            
+
             setLogoFileName(extractedName)
             // Salva no localStorage para próxima vez
             localStorage.setItem('agency_logo_filename', extractedName)
@@ -176,7 +176,7 @@ export function SettingsForm({ initialData, userEmail }: SettingsFormProps) {
         }
 
         // Valida dimensões (200x200)
-        const img = new Image()
+        const img = new window.Image()
         img.onload = async () => {
             if (img.width !== 200 || img.height !== 200) {
                 toast.error('Dimensões inválidas. A imagem deve ser 200x200 pixels.')
