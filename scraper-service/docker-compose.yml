@@ -1,0 +1,16 @@
+services:
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+
+  scraper:
+    build: .
+    ports:
+      - "8080:8080"
+    env_file: .env
+    depends_on:
+      - redis
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - PLAYWRIGHT_HEADLESS=true # Pode mudar para false se quiser ver o browser no Docker (precisa de volume X11/VNC, melhor deixar true)

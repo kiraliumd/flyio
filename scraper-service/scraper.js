@@ -4,6 +4,10 @@ const fs = require('fs');
 const path = require('path');
 const supabase = require('./supabaseClient');
 
+// Pasta para salvar vídeos e downloads
+const DOWNLOADS_DIR = path.join(__dirname, 'downloaded_files');
+if (!fs.existsSync(DOWNLOADS_DIR)) fs.mkdirSync(DOWNLOADS_DIR, { recursive: true });
+
 // Ativa plugin stealth
 chromiumExtra.use(stealth());
 
@@ -14,7 +18,8 @@ const SESSION_FILE = path.join(__dirname, 'session_gol.json');
 const PROXY_SERVER = process.env.PROXY_SERVER;
 const PROXY_USERNAME = process.env.PROXY_USERNAME;
 const PROXY_PASSWORD = process.env.PROXY_PASSWORD;
-const TOTAL_PROXIES = parseInt(process.env.TOTAL_PROXIES || '250');
+// Limpeza robusta de aspas e espaços que costumam aparecer no .env/docker
+const TOTAL_PROXIES = parseInt(String(process.env.TOTAL_PROXIES || '250').replace(/["']/g, '').trim());
 
 // Perfis para parecer mais humano
 const USER_AGENTS = [
@@ -39,11 +44,11 @@ async function humanPause(baseMs = 400) {
 function getRandomProxy() {
     if (!PROXY_SERVER || !PROXY_USERNAME || !PROXY_PASSWORD) return undefined;
     const randomIndex = randomInt(1, TOTAL_PROXIES);
-    // Se o usuário já passou o sufixo -BR- no .env, mantemos. Caso contrário, o original sugere um formato específico.
-    // O usuário confirmou: PROXY_USERNAME="xtweuspr-BR-"
+    // Limpa o username de aspas eventuais
+    const cleanUsername = String(PROXY_USERNAME).replace(/["']/g, '').trim();
     return {
         server: PROXY_SERVER,
-        username: `${PROXY_USERNAME}${randomIndex}`,
+        username: `${cleanUsername}${randomIndex}`,
         password: PROXY_PASSWORD
     };
 }
@@ -191,6 +196,15 @@ async function scrapeGol({ pnr, lastname, origin, useProxy, agencyId }) {
             } catch (e) { }
         }
 
+        // Configuração de Vídeo (se solicitado)
+        if (process.env.RECORD_VIDEO === 'true') {
+            contextOptions.recordVideo = {
+                dir: DOWNLOADS_DIR,
+                size: { width: 1280, height: 720 }
+            };
+            console.log(`🎥 Gravação de vídeo ativada em: ${DOWNLOADS_DIR}`);
+        }
+
         const context = await browser.newContext(contextOptions);
         await applyAntiBotScripts(context);
         const page = await context.newPage();
@@ -248,7 +262,7 @@ async function scrapeGol({ pnr, lastname, origin, useProxy, agencyId }) {
             try {
                 const race = await Promise.race([
                     apiPromise.then(res => ({ type: 'api', data: res })),
-                    page.waitForSelector('.pnr-info, text=Meu voo', { timeout: 10000 }).then(() => ({ type: 'visual_success' })),
+                    page.waitForSelector('.pnr-info, text=Meu voo', { timeout: 15000 }).then(() => ({ type: 'visual_success' })),
                     page.waitForSelector('text=Houve um erro', { timeout: 5000 }).then(() => ({ type: 'popup' })),
                     page.waitForSelector('text=Access Denied', { timeout: 5000 }).then(() => ({ type: 'block' }))
                 ]);
